@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KLM Sender</title>
+<meta name="theme-color" content="#2F5BFF">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="description" content="Kirim file apa saja antar PC dan HP, ukuran asli tanpa kompres, langsung peer-to-peer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: satu kolom, kartu kode perangkat sebagai pusat, lalu hubungkan → kirim → riwayat */
+:root{
+  --bg:#F2F4F8; --surface:#FFFFFF; --sunk:#EAEEF5; --ink:#0B1220; --muted:#5A6476; --line:#DFE4EC;
+  --accent:#2F5BFF; --accent-soft:#E6ECFF; --on-accent:#FFFFFF;
+  --ok:#0F9D63; --ok-soft:#DDF5EA; --warn:#B57A00; --err:#D6363C; --err-soft:#FDE6E7;
+  --f-display:"Sora",system-ui,sans-serif; --f-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  --r:16px; color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0A0E15; --surface:#121925; --sunk:#0E141E; --ink:#E9EEF6; --muted:#8D98AB; --line:#222C3B;
+  --accent:#6283FF; --accent-soft:#1A2547; --on-accent:#FFFFFF;
+  --ok:#2BC587; --ok-soft:#0F2A20; --warn:#E3B341; --err:#F0686C; --err-soft:#33161A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A0E15; --surface:#121925; --sunk:#0E141E; --ink:#E9EEF6; --muted:#8D98AB; --line:#222C3B;
+  --accent:#6283FF; --accent-soft:#1A2547; --on-accent:#FFFFFF;
+  --ok:#2BC587; --ok-soft:#0F2A20; --warn:#E3B341; --err:#F0686C; --err-soft:#33161A; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+[hidden]{display:none!important}
+.wrap{max-width:560px;margin:0 auto;padding-block:20px 48px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:4px 6px}
+.brand{display:flex;align-items:center;gap:10px;font:700 19px/1 var(--f-display);letter-spacing:-.02em}
+.mark{width:34px;height:34px;border-radius:10px;background:var(--accent);display:grid;place-items:center}
+.mark svg{width:20px;height:20px}
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.pill.ready .dot{background:var(--ok)} .pill.linked{color:var(--ok);border-color:transparent;background:var(--ok-soft)} .pill.linked .dot{background:var(--ok)}
+.pill.busy .dot{background:var(--warn);animation:pulse 1.2s infinite} .pill.bad .dot{background:var(--err)}
+@keyframes pulse{50%{opacity:.3}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.label{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+/* kode perangkat */
+.me{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center}
+.code{font:700 clamp(34px,10vw,46px)/1 var(--f-mono);letter-spacing:.06em;display:flex;align-items:center;gap:.25em;user-select:all}
+.code span:nth-child(2){color:var(--muted);font-weight:500}
+.qr{width:104px;height:104px;background:#fff;border-radius:12px;padding:6px;border:1px solid var(--line)}
+.qr svg{width:100%;height:100%;display:block}
+.qr.empty{background:var(--sunk)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.me .row{margin-top:14px}
+.devname{display:flex;align-items:center;gap:6px;margin-top:12px;color:var(--muted);font-size:13px}
+.devname input{border:0;background:transparent;color:var(--ink);font:600 13px var(--f-body);padding:2px 4px;border-bottom:1px dashed var(--line);min-width:0;width:12em}
+.devname input:focus{outline:none;border-bottom-color:var(--accent)}
+/* tombol */
+button,.btn{font:600 14px var(--f-body);border-radius:11px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;justify-content:center;transition:background .15s,border-color .15s,transform .05s}
+button:hover{border-color:var(--muted)} button:active{transform:scale(.98)}
+button:focus-visible,input:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)} .primary:hover{border-color:var(--accent);filter:brightness(1.08)}
+.ghost{background:transparent;border-color:transparent;color:var(--muted);padding:8px 10px} .ghost:hover{color:var(--ink);border-color:transparent;background:var(--sunk)}
+.small{font-size:13px;padding:7px 11px;border-radius:9px}
+button:disabled{opacity:.45;cursor:not-allowed}
+svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* hubungkan */
+.connect{display:flex;gap:8px}
+.connect input{flex:1;min-width:0;font:700 22px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;padding:10px 14px;border-radius:11px;border:1px solid var(--line);background:var(--sunk);color:var(--ink)}
+.connect input::placeholder{color:var(--muted);opacity:.5;letter-spacing:.14em}
+.peer{display:flex;align-items:center;gap:12px}
+.avatar{width:42px;height:42px;border-radius:12px;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;flex:none}
+.peer .who{flex:1;min-width:0}
+.peer b{display:block;font:600 16px var(--f-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.peer small{color:var(--muted);font-size:12.5px}
+.hint{color:var(--muted);font-size:13px;margin:10px 0 0}
+/* drop */
+.drop{border:1.5px dashed var(--line);border-radius:var(--r);padding:26px 18px;text-align:center;background:var(--surface);transition:border-color .15s,background .15s}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop.off{opacity:.55}
+.drop h2{font:600 18px var(--f-display);margin:8px 0 4px;letter-spacing:-.01em}
+.drop p{margin:0 0 16px;color:var(--muted);font-size:13.5px}
+.drop .big{width:44px;height:44px;margin:0 auto;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.drop .row{justify-content:center}
+/* transfer */
+.list{display:flex;flex-direction:column;gap:10px}
+.empty-list{color:var(--muted);font-size:13.5px;text-align:center;padding:18px;border-radius:var(--r);background:var(--sunk)}
+.tx{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.tx-head{display:flex;gap:12px;align-items:flex-start}
+.dir{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;background:var(--accent-soft);color:var(--accent)}
+.tx.in .dir{background:var(--ok-soft);color:var(--ok)}
+.tx-title{flex:1;min-width:0}
+.tx-title b{display:block;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-title small{color:var(--muted);font-size:12.5px}
+.badge{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:99px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.badge.done{background:var(--ok-soft);color:var(--ok)} .badge.err{background:var(--err-soft);color:var(--err)} .badge.run{background:var(--accent-soft);color:var(--accent)}
+.bar{height:8px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:inherit;transition:width .25s linear}
+.tx.in .bar i{background:var(--ok)}
+.stats{display:flex;justify-content:space-between;gap:10px;font:500 12.5px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.stats .spd{color:var(--ink);font-weight:700}
+.files{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.files li{display:flex;gap:10px;justify-content:space-between;align-items:center;min-width:0}
+.files li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.files li .sz{font:500 12px var(--f-mono);color:var(--muted);flex:none}
+.files li button{flex:none}
+.tx .row{justify-content:flex-end}
+.note{font-size:12.5px;color:var(--muted);line-height:1.55}
+.note b{color:var(--ink);font-weight:600}
+.settings{display:flex;flex-direction:column;gap:10px}
+.settings .row{justify-content:space-between}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;
+  background:var(--ink);color:var(--bg);font-weight:600;font-size:13.5px;padding:10px 16px;border-radius:12px;transition:.2s;max-width:calc(100% - 32px);z-index:20}
+.toast.show{opacity:1;transform:translateX(-50%)}
+@media (max-width:420px){.qr{width:88px;height:88px}.me{gap:12px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h13l-4-4"/><path d="M20 15H7l4 4"/></svg></div>
+      KLM Sender
+    </div>
+    <div class="row" style="margin:0;gap:8px;flex-wrap:nowrap">
+    <button class="small primary" id="installBtn" hidden><svg class="i" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>Install</button>
+    <div class="pill busy" id="status"><span class="dot"></span><span id="statusText">Menyiapkan…</span></div>
+    </div>
+  </header>
+  <div class="card note" id="iosHint" hidden style="padding:12px 16px">Pasang di iPhone: ketuk tombol <b>Bagikan</b> di Safari, lalu pilih <b>Tambahkan ke Layar Utama</b>.</div>
+
+  <section class="card" aria-labelledby="meLbl">
+    <div class="me">
+      <div style="min-width:0">
+        <p class="label" id="meLbl">Kode perangkat ini</p>
+        <div class="code" id="myCode"><span>···</span><span>-</span><span>···</span></div>
+        <div class="devname"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/></svg><input id="devName" aria-label="Nama perangkat" maxlength="32"></div>
+      </div>
+      <div class="qr empty" id="qr" title="Pindai dengan kamera HP untuk langsung terhubung"></div>
+    </div>
+    <div class="row">
+      <button class="small" id="copyLink"><svg class="i" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Salin link</button>
+      <button class="small" id="copyCode">Salin kode</button>
+      <button class="small ghost" id="newCode" title="Buat kode baru">Kode baru</button>
+    </div>
+    <p class="hint" id="lanHint" hidden></p>
+  </section>
+
+  <section class="card" aria-labelledby="linkLbl">
+    <p class="label" id="linkLbl">Perangkat tujuan</p>
+    <div id="connectBox">
+      <form class="connect" id="connectForm" autocomplete="off">
+        <input id="peerCode" inputmode="text" maxlength="7" placeholder="ABC-123" aria-label="Kode perangkat tujuan" spellcheck="false">
+        <button class="primary" id="connectBtn" type="submit">Hubungkan</button>
+      </form>
+      <p class="hint">Masukkan kode yang tampil di perangkat lain, atau pindai QR-nya. Jarak dekat maupun jauh, asal keduanya online.</p>
+    </div>
+    <div class="peer" id="peerBox" hidden>
+      <div class="avatar"><svg class="i" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div class="who"><b id="peerName">Perangkat</b><small id="peerInfo">Terhubung langsung</small></div>
+      <button class="small" id="disconnectBtn">Putuskan</button>
+    </div>
+  </section>
+
+  <section class="drop off" id="drop" aria-labelledby="dropLbl">
+    <div class="big"><svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 20h16"/></svg></div>
+    <h2 id="dropLbl">Kirim file</h2>
+    <p id="dropHint">Hubungkan ke perangkat tujuan dulu.</p>
+    <div class="row">
+      <label class="btn primary" id="pickFilesLbl"><input type="file" id="pickFiles" multiple hidden>Pilih file</label>
+      <label class="btn" id="pickDirLbl"><input type="file" id="pickDir" webkitdirectory multiple hidden>Pilih folder</label>
+    </div>
+  </section>
+
+  <section aria-labelledby="txLbl">
+    <p class="label" id="txLbl" style="margin-left:4px">Transfer</p>
+    <div class="list" id="list"><div class="empty-list" id="emptyList">Belum ada transfer. File yang dikirim dan diterima muncul di sini.</div></div>
+  </section>
+
+  <section class="card settings" aria-labelledby="setLbl">
+    <p class="label" id="setLbl" style="margin:0">Penyimpanan</p>
+    <div class="row">
+      <div class="note" id="saveInfo" style="min-width:0;overflow-wrap:anywhere">File diterima disimpan ke folder Unduhan.</div>
+      <div class="row" style="margin:0">
+        <button class="small" id="openSave" hidden>Buka folder</button>
+        <button class="small" id="pickSave" hidden>Pilih folder simpan</button>
+      </div>
+    </div>
+    <label class="row toggle" for="autoAccept" style="justify-content:flex-start;cursor:pointer;margin:0">
+      <input type="checkbox" id="autoAccept"> <span class="note" style="color:var(--ink)">Terima otomatis dari perangkat yang sudah terhubung</span>
+    </label>
+    <p class="note" id="capNote"></p>
+  </section>
+
+  <p class="note" style="padding:0 4px">File dikirim <b>langsung antar perangkat</b> (peer-to-peer, terenkripsi DTLS), <b>ukuran asli tanpa kompres</b>. Server hanya dipakai untuk mempertemukan kedua perangkat. Jika jaringan sangat ketat, data dilewatkan relay terenkripsi.</p>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* PWA: service worker + tombol install (hanya di situs https, bukan di aplikasi Windows) */
+(function(){
+  if(window.klmNative) return;
+  if('serviceWorker' in navigator && location.protocol==='https:'){
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  }
+  let deferred=null;
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred=e; const b=document.getElementById('installBtn'); if(b) b.hidden=false; });
+  window.addEventListener('appinstalled', () => { const b=document.getElementById('installBtn'); if(b) b.hidden=true; });
+  document.addEventListener('DOMContentLoaded', () => {
+    const b=document.getElementById('installBtn');
+    b.onclick = async () => { if(!deferred) return; deferred.prompt(); try{ await deferred.userChoice; }catch(e){} deferred=null; b.hidden=true; };
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    let seen=false; try{ seen = localStorage.getItem('klm-ios-hint')==='1'; }catch(e){}
+    if(ios && !standalone && !seen && location.protocol==='https:'){ const h=document.getElementById('iosHint'); h.hidden=false; try{ localStorage.setItem('klm-ios-hint','1'); }catch(e){} }
+  });
+})();
+</script>
+<script>
+/* Muat komponen: coba file lokal dulu, lalu beberapa CDN cadangan */
+(function(){
+  const deps = [
+    { test: () => typeof Peer !== 'undefined', urls: ['vendor/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'] },
+    { test: () => typeof qrcode !== 'undefined', urls: ['vendor/qrcode.js','https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js','https://unpkg.com/qrcode-generator@1.4.4/qrcode.js'] }
+  ];
+  const load = src => new Promise(res => { const s=document.createElement('script'); s.src=src; s.onload=()=>res(true); s.onerror=()=>{ s.remove(); res(false); }; document.head.appendChild(s); });
+  (async () => {
+    for(const d of deps){ for(const u of d.urls){ if(d.test()) break; await load(u); } }
+    window.__klmStart && window.__klmStart();
+  })();
+})();
+</script>
+<script>
+window.__klmStart = () => {
+'use strict';
+const NATIVE = window.klmNative || null;   // ada saat berjalan sebagai aplikasi Windows
+let NINFO = null, showDirFn = null;
+const PREFIX = 'klmsender-v1-';
+const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const CHUNK = 64 * 1024;            // ukuran paket data channel
+const READ = 4 * 1024 * 1024;       // baca file per 4 MB
+const HIGH = 12 * 1024 * 1024, LOW = 2 * 1024 * 1024; // backpressure
+const BIG_TO_DISK = 300 * 1024 * 1024; // di atas ini, tulis langsung ke disk bila bisa
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){ try{ return localStorage.getItem(k) }catch(e){ return null } },
+  set(k,v){ try{ localStorage.setItem(k,v) }catch(e){} }
+};
+
+/* ---------- util ---------- */
+const fmt = b => { if(b < 1024) return b + ' B'; const u=['KB','MB','GB','TB']; let i=-1; do{ b/=1024; i++ }while(b>=1024 && i<u.length-1); return b.toFixed(b<10?2:b<100?1:0)+' '+u[i]; };
+const fmtSpd = bps => fmt(bps) + '/s';
+const fmtEta = s => { if(!isFinite(s) || s<0) return '—'; s=Math.round(s); if(s<60) return s+' dtk'; const m=Math.floor(s/60); if(m<60) return m+' mnt '+(s%60)+' dtk'; return Math.floor(m/60)+' jam '+(m%60)+' mnt'; };
+const genCode = () => { const a=new Uint32Array(6); crypto.getRandomValues(a); return Array.from(a,x=>ALPHA[x%ALPHA.length]).join(''); };
+const cleanCode = s => (s||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+const uid = () => Math.random().toString(36).slice(2,10);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let toastT;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2800); }
+function setStatus(cls, text){ const s=$('status'); s.className='pill '+cls; $('statusText').textContent=text; }
+function guessDevice(){
+  const ua=navigator.userAgent;
+  if(/iPhone/.test(ua)) return 'iPhone'; if(/iPad/.test(ua)) return 'iPad';
+  if(/Android/.test(ua)) return /Mobile/.test(ua)?'HP Android':'Tablet Android';
+  if(/Windows/.test(ua)) return 'PC Windows'; if(/Mac OS/.test(ua)) return 'Mac'; if(/Linux/.test(ua)) return 'PC Linux';
+  return 'Perangkat';
+}
+async function copy(text, msg){
+  try{ await navigator.clipboard.writeText(text); toast(msg); }
+  catch(e){ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); toast(msg);}catch(_){ toast(text);} ta.remove(); }
+}
+
+/* ---------- state ---------- */
+let peer=null, conn=null, dc=null, myCode=null, peerLabel='';
+const waiters = new Map();
+const sendQueue = []; let sending=false;
+let incoming=null;          // batch yang sedang diterima
+let dirHandle=null;         // folder simpan pilihan pengguna
+const batches = new Map();
+let wakeLock=null;
+
+$('devName').value = store.get('klm-name') || guessDevice();
+$('devName').addEventListener('change', e => { const v=e.target.value.trim()||guessDevice(); e.target.value=v; store.set('klm-name',v); sendMsg({t:'hello',name:v}); });
+const myName = () => $('devName').value.trim() || guessDevice();
+
+/* ---------- kemampuan browser ---------- */
+const canDir = !NATIVE && 'showDirectoryPicker' in window;
+const canSave = !NATIVE && 'showSaveFilePicker' in window;
+let autoAccept = store.get('klm-auto')==='1';
+$('autoAccept').checked = autoAccept;
+$('autoAccept').onchange = e => { autoAccept=e.target.checked; store.set('klm-auto', autoAccept?'1':'0'); };
+if(canDir){ $('pickSave').hidden=false; }
+if(NATIVE){
+  $('pickSave').hidden=false; $('openSave').hidden=false; $('pickSave').textContent='Ganti folder';
+  $('capNote').textContent='File ditulis langsung ke disk, jadi ukuran berapa pun aman diterima.';
+  const showDir = d => { $('saveInfo').innerHTML='Disimpan ke <b>'+esc(d)+'</b>'; };
+  $('pickSave').onclick = async () => { showDir(await NATIVE.chooseDir()); };
+  $('openSave').onclick = () => NATIVE.openDir();
+  showDirFn = showDir;
+} else $('capNote').textContent = canSave
+  ? 'Browser ini bisa menulis file langsung ke disk, jadi file sebesar apa pun aman diterima.'
+  : 'Di browser ini file diterima ditampung di memori sampai selesai. Untuk file sangat besar (beberapa GB), terima di PC dengan Chrome atau Edge.';
+if(!NATIVE) $('pickSave').onclick = async () => {
+  try{ dirHandle = await window.showDirectoryPicker({mode:'readwrite'}); $('saveInfo').innerHTML='Disimpan ke folder <b>'+esc(dirHandle.name)+'</b>'; $('pickSave').textContent='Ganti folder'; }
+  catch(e){}
+};
+
+/* ---------- peer ---------- */
+function showCode(code){
+  const a=code.slice(0,3), b=code.slice(3);
+  $('myCode').innerHTML = '<span>'+a+'</span><span>-</span><span>'+b+'</span>';
+}
+function lanBase(){ return (NINFO && NINFO.lan && NINFO.lan.length) ? 'http://'+NINFO.lan[0].address+':'+NINFO.port+'/' : null; }
+function shareLink(){
+  if(NATIVE){ const b=lanBase(); return (b || location.origin+'/') + '?to=' + myCode; }
+  return location.origin + location.pathname + '?to=' + myCode;
+}
+function renderQR(){
+  try{
+    const q = qrcode(0,'M'); q.addData(shareLink()); q.make();
+    const el=$('qr'); el.classList.remove('empty'); el.innerHTML = q.createSvgTag({cellSize:4, margin:0, scalable:true});
+  }catch(e){}
+  if(NATIVE){
+    const b=lanBase(), h=$('lanHint'); h.hidden=false;
+    h.innerHTML = b
+      ? 'Pindai QR dengan kamera HP yang tersambung ke <b>WiFi yang sama</b>, atau buka <b style="user-select:all;font-family:var(--f-mono)">'+esc(shareLink())+'</b> di browser HP. HP di jaringan lain: buka KLM Sender versi web lalu masukkan kode.'
+      : 'PC ini belum tersambung ke jaringan lokal. HP bisa membuka KLM Sender versi web lalu memasukkan kode di atas.';
+  }
+}
+function startPeer(code){
+  if(peer){ try{peer.destroy()}catch(e){} }
+  myCode=code; showCode(code); setStatus('busy','Menyiapkan…');
+  if(typeof Peer==='undefined'){ setStatus('bad','Tidak ada internet'); toast('Butuh internet untuk menghubungkan perangkat. Mencoba lagi…'); setTimeout(()=>location.reload(), 8000); return; }
+  peer = new Peer(PREFIX+code, {debug:0});
+  peer.on('open', () => { store.set('klm-code',code); setStatus(conn&&conn.open?'linked':'ready', conn&&conn.open?'Terhubung':'Siap'); renderQR(); autoConnect(); });
+  peer.on('connection', c => setupConn(c));
+  peer.on('disconnected', () => { setStatus('busy','Menyambung ulang…'); setTimeout(()=>{ try{ if(peer && !peer.destroyed) peer.reconnect(); }catch(e){} },1500); });
+  peer.on('error', err => {
+    const t=err.type;
+    if(t==='unavailable-id'){ startPeer(genCode()); return; }
+    if(t==='peer-unavailable'){ toast('Perangkat tidak ditemukan. Cek kode dan pastikan KLM Sender terbuka di sana.'); resetConnectBtn(); return; }
+    if(t==='network' || t==='server-error' || t==='socket-error' || t==='socket-closed'){ setStatus('bad','Offline'); return; }
+    if(t==='browser-incompatible'){ setStatus('bad','Tidak didukung'); toast('Browser ini tidak mendukung transfer langsung.'); return; }
+  });
+}
+let autoTried=false;
+function autoConnect(){
+  if(autoTried) return; autoTried=true;
+  const to = cleanCode(new URLSearchParams(location.search).get('to'));
+  if(to && to.length===6 && to!==myCode){ $('peerCode').value=to.slice(0,3)+'-'+to.slice(3); connectTo(to); }
+}
+function connectTo(code){
+  if(!peer || peer.disconnected){ toast('Belum online. Tunggu sebentar.'); return; }
+  if(code===myCode){ toast('Itu kode perangkat ini sendiri.'); return; }
+  $('connectBtn').disabled=true; $('connectBtn').textContent='Menghubungkan…';
+  const c = peer.connect(PREFIX+code, {reliable:true, serialization:'raw', metadata:{name:myName()}});
+  setupConn(c);
+  setTimeout(()=>{ if(c && !c.open && conn===c){ toast('Belum tersambung. Coba lagi atau periksa jaringan kedua perangkat.'); resetConnectBtn(); try{c.close()}catch(e){} } }, 20000);
+}
+function resetConnectBtn(){ $('connectBtn').disabled=false; $('connectBtn').textContent='Hubungkan'; }
+
+function setupConn(c){
+  if(conn && conn!==c){ const old=conn; conn=null; try{old.close()}catch(e){} }
+  conn=c;
+  const onOpen = () => {
+    if(conn!==c) return;
+    dc = c.dataChannel; dc.binaryType='arraybuffer'; dc.bufferedAmountLowThreshold = LOW;
+    peerLabel = (c.metadata && c.metadata.name) || 'Perangkat';
+    showPeer(true);
+    sendMsg({t:'hello', name:myName()});
+    runQueue();
+  };
+  if(c.open) onOpen(); else c.on('open', onOpen);
+  c.on('data', d => { if(conn===c) onData(d); });
+  c.on('close', () => onClose(c));
+  c.on('error', () => onClose(c));
+}
+function onClose(c){
+  if(conn!==c) return;
+  conn=null; dc=null; showPeer(false); resetConnectBtn();
+  for(const [k,fn] of waiters){ fn('closed'); } waiters.clear();
+  if(incoming && incoming.status!=='done'){ failIncoming('Koneksi terputus'); }
+  toast('Koneksi terputus.');
+}
+function showPeer(on){
+  $('connectBox').hidden=on; $('peerBox').hidden=!on;
+  $('drop').classList.toggle('off', !on);
+  $('dropHint').textContent = on ? 'Seret file ke sini, atau pilih. Bisa banyak file sekaligus, ukuran berapa pun.' : 'Hubungkan ke perangkat tujuan dulu.';
+  if(on){ $('peerName').textContent=peerLabel; setStatus('linked','Terhubung'); detectRoute(); }
+  else setStatus(peer && peer.open ? 'ready':'busy', peer && peer.open ? 'Siap':'Menyiapkan…');
+}
+async function detectRoute(){
+  $('peerInfo').textContent='Terhubung langsung';
+  try{
+    const pc = conn && conn.peerConnection; if(!pc) return;
+    await new Promise(r=>setTimeout(r,1200));
+    const st = await pc.getStats(); let pair=null, cands={};
+    st.forEach(r=>{ if(r.type==='candidate-pair' && (r.nominated||r.selected) && r.state==='succeeded') pair=r; if(r.type==='local-candidate'||r.type==='remote-candidate') cands[r.id]=r; });
+    if(!pair) return;
+    const l=cands[pair.localCandidateId], r=cands[pair.remoteCandidateId];
+    const types=[l&&l.candidateType, r&&r.candidateType];
+    if(types.includes('relay')) $('peerInfo').textContent='Lewat relay (jarak jauh / jaringan ketat)';
+    else if(types.every(t=>t==='host')) $('peerInfo').textContent='Jaringan lokal yang sama · tercepat';
+    else $('peerInfo').textContent='Langsung lewat internet';
+  }catch(e){}
+}
+$('connectForm').addEventListener('submit', e => { e.preventDefault(); const c=cleanCode($('peerCode').value); if(c.length!==6){ toast('Kode terdiri dari 6 karakter.'); return; } connectTo(c); });
+$('peerCode').addEventListener('input', e => { const c=cleanCode(e.target.value); e.target.value = c.length>3 ? c.slice(0,3)+'-'+c.slice(3) : c; });
+$('disconnectBtn').onclick = () => { if(conn){ const c=conn; onClose(c); try{c.close()}catch(e){} } };
+$('copyLink').onclick = () => myCode && copy(shareLink(), 'Link disalin. Buka di perangkat lain.');
+$('copyCode').onclick = () => myCode && copy(myCode.slice(0,3)+'-'+myCode.slice(3), 'Kode disalin.');
+$('newCode').onclick = () => { if(conn){ toast('Putuskan koneksi dulu.'); return; } startPeer(genCode()); };
+
+function sendMsg(o){ if(dc && dc.readyState==='open'){ try{ dc.send(JSON.stringify(o)); }catch(e){} } }
+function wait(key){ return new Promise(r => waiters.set(key, r)); }
+function resolve(key, v){ const f=waiters.get(key); if(f){ waiters.delete(key); f(v); } }
+function drain(){ return new Promise(r => { if(!dc || dc.bufferedAmount<=LOW) return r(); const h=()=>{ dc && dc.removeEventListener('bufferedamountlow',h); clearInterval(iv); r(); }; const iv=setInterval(()=>{ if(!dc||dc.readyState!=='open'||dc.bufferedAmount<=LOW) h(); },200); dc.addEventListener('bufferedamountlow',h); }); }
+
+/* ---------- wake lock & tutup tab ---------- */
+async function keepAwake(on){
+  try{
+    if(on && !wakeLock && 'wakeLock' in navigator){ wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release',()=>{wakeLock=null}); }
+    if(!on && wakeLock){ await wakeLock.release(); wakeLock=null; }
+  }catch(e){}
+}
+const busy = () => sending || (incoming && incoming.status==='run');
+document.addEventListener('visibilitychange', () => { if(document.visibilityState==='visible' && busy()) keepAwake(true); });
+window.addEventListener('beforeunload', e => { if(busy()){ e.preventDefault(); e.returnValue=''; } });
+
+/* ---------- kirim ---------- */
+const relName = f => (f.webkitRelativePath || f.name);
+function queueFiles(list){
+  const files = Array.from(list).filter(f => f && f.size>=0);
+  if(!files.length) return;
+  if(!conn || !conn.open){ toast('Hubungkan ke perangkat tujuan dulu.'); return; }
+  const b = { id:uid(), dir:'out', files, meta:files.map((f,i)=>({i,name:relName(f),size:f.size,type:f.type||''})), total:files.reduce((s,f)=>s+f.size,0), done:0, status:'queue', cancel:false };
+  batches.set(b.id,b); render(b); sendQueue.push(b); runQueue();
+}
+async function runQueue(){
+  if(sending) return; sending=true;
+  while(sendQueue.length && dc && dc.readyState==='open'){
+    const b = sendQueue.shift();
+    if(b.cancel){ continue; }
+    b.status='wait'; render(b);
+    sendMsg({t:'offer', id:b.id, files:b.meta, total:b.total});
+    const ans = await wait(b.id);
+    if(ans!=='accept'){ b.status = ans==='reject'?'rejected':'failed'; render(b); continue; }
+    b.status='run'; b.t0=performance.now(); startMeter(b); keepAwake(true); render(b);
+    try{
+      for(let i=0;i<b.files.length && !b.cancel;i++){
+        sendMsg({t:'start', i});
+        await sendFile(b.files[i], b);
+        if(!b.cancel) sendMsg({t:'end', i});
+      }
+      if(b.cancel){ sendMsg({t:'cancel', id:b.id}); b.status='cancelled'; }
+      else {
+        sendMsg({t:'batchdone', id:b.id});
+        const ack = await wait(b.id+':ack');
+        b.status = ack==='ok' ? 'done' : (b.cancel?'cancelled':'failed');
+        if(b.status==='done') b.done=b.total;
+      }
+    }catch(e){ b.status='failed'; }
+    stopMeter(b); render(b);
+  }
+  sending=false; keepAwake(false);
+}
+async function sendFile(file, b){
+  let off=0;
+  while(off < file.size){
+    if(b.cancel || !dc || dc.readyState!=='open') { if(!b.cancel) throw new Error('closed'); return; }
+    const buf = await file.slice(off, off+READ).arrayBuffer();
+    for(let p=0; p<buf.byteLength; p+=CHUNK){
+      if(b.cancel) return;
+      if(!dc || dc.readyState!=='open') throw new Error('closed');
+      if(dc.bufferedAmount > HIGH) await drain();
+      const n = Math.min(CHUNK, buf.byteLength-p);
+      dc.send(new Uint8Array(buf, p, n));
+      b.sentRaw = (b.sentRaw||0) + n;
+    }
+    off += buf.byteLength;
+  }
+}
+
+/* ---------- terima ---------- */
+function onData(d){
+  if(typeof d !== 'string'){ onChunk(d); return; }
+  let m; try{ m=JSON.parse(d) }catch(e){ return; }
+  switch(m.t){
+    case 'hello': peerLabel = String(m.name||'Perangkat').slice(0,40); $('peerName').textContent=peerLabel; break;
+    case 'offer': onOffer(m); break;
+    case 'accept': resolve(m.id,'accept'); break;
+    case 'reject': resolve(m.id,'reject'); break;
+    case 'progress': { const b=batches.get(m.id); if(b){ b.ackBytes=m.bytes; } break; }
+    case 'ack': resolve(m.id+':ack', m.ok?'ok':'fail'); break;
+    case 'cancel': {
+      const b=batches.get(m.id);
+      if(b && b.dir==='out'){ b.cancel=true; b.status='cancelled'; render(b); resolve(m.id,'reject'); resolve(m.id+':ack','fail'); }
+      if(incoming && incoming.id===m.id){ abortIncoming('Dibatalkan pengirim'); }
+      break; }
+    case 'start': if(incoming && incoming.status==='run') chain(()=>openSink(m.i)); break;
+    case 'end': if(incoming && incoming.status==='run') chain(()=>closeSink(m.i)); break;
+    case 'batchdone': if(incoming && incoming.id===m.id) chain(()=>finishIncoming()); break;
+  }
+}
+function onOffer(m){
+  const files = (m.files||[]).map(f=>({i:f.i, name:String(f.name||'file'), size:+f.size||0, type:String(f.type||'')}));
+  const b = { id:m.id, dir:'in', meta:files, total:files.reduce((s,f)=>s+f.size,0), done:0, status:'offer', from:peerLabel, saved:[] };
+  batches.set(b.id,b); incoming=b; render(b);
+  const body = peerLabel+' mengirim '+files.length+' file ('+fmt(b.total)+')';
+  if(NATIVE){ if(!document.hasFocus()) NATIVE.notify('KLM Sender', body); }
+  else if(document.hidden && 'Notification' in window && Notification.permission==='granted'){ try{ new Notification('KLM Sender', {body}); }catch(e){} }
+  const needsPicker = !NATIVE && !dirHandle && canSave && b.total >= BIG_TO_DISK;
+  if(autoAccept && !needsPicker) acceptIncoming(b);
+}
+async function acceptIncoming(b){
+  if(b.status!=='offer') return;
+  // tentukan tempat simpan (dalam klik pengguna)
+  b.mode='memory';
+  try{
+    if(NATIVE){ b.mode='native'; }
+    else if(dirHandle){ b.mode='dir'; b.dir_h=dirHandle; }
+    else if(canSave && b.total >= BIG_TO_DISK){
+      if(b.meta.length===1){ b.fileHandle = await window.showSaveFilePicker({suggestedName: baseName(b.meta[0].name)}); b.mode='single'; }
+      else if(canDir){ b.dir_h = await window.showDirectoryPicker({mode:'readwrite'}); b.mode='dir'; }
+    }
+  }catch(e){ toast('Tempat simpan tidak dipilih.'); return; }
+  b.status='run'; b.t0=performance.now(); b.q=Promise.resolve(); startMeter(b); keepAwake(true); render(b);
+  if('Notification' in window && Notification.permission==='default'){ try{ Notification.requestPermission(); }catch(e){} }
+  sendMsg({t:'accept', id:b.id});
+}
+function rejectIncoming(b){ b.status='rejected'; render(b); sendMsg({t:'reject', id:b.id}); if(incoming===b) incoming=null; }
+const baseName = n => n.split('/').pop() || 'file';
+const flatName = n => n.split('/').filter(Boolean).join('_') || 'file';
+
+function chain(fn){ const b=incoming; if(!b) return; b.q = b.q.then(()=> b.status==='run' ? fn() : null).catch(err => { failIncoming('Gagal menyimpan: '+(err && err.message || err)); }); }
+async function uniqueHandle(dir, name){
+  const dot=name.lastIndexOf('.'); const stem=dot>0?name.slice(0,dot):name, ext=dot>0?name.slice(dot):'';
+  for(let k=0;k<1000;k++){
+    const n = k? stem+' ('+k+')'+ext : name;
+    try{ await dir.getFileHandle(n); }catch(e){ return dir.getFileHandle(n,{create:true}); }
+  }
+  return dir.getFileHandle(stem+'-'+Date.now()+ext,{create:true});
+}
+async function openSink(i){
+  const b=incoming, f=b.meta[i]; b.cur={i, f, chunks:[], got:0};
+  if(b.mode==='native'){ b.cur.w = await nativeWriter(f.name); b.cur.savedAs = b.cur.w.name; }
+  else if(b.mode==='single'){ b.cur.w = await b.fileHandle.createWritable(); }
+  else if(b.mode==='dir'){
+    const parts = f.name.split('/').filter(p=>p && p!=='.' && p!=='..'); const fname = parts.pop() || 'file';
+    let d=b.dir_h; for(const p of parts){ d = await d.getDirectoryHandle(p,{create:true}); }
+    const fh = await uniqueHandle(d, fname); b.cur.w = await fh.createWritable(); b.cur.savedAs = fh.name;
+  }
+}
+function onChunk(buf){
+  const b=incoming; if(!b || b.status!=='run') return;
+  b.done += buf.byteLength;
+  b.q = b.q.then(async () => {
+    if(b.status!=='run' || !b.cur) return;
+    if(b.cur.w) await b.cur.w.write(buf); else b.cur.chunks.push(buf);
+  }).catch(err => failIncoming('Gagal menyimpan: '+(err && err.message || err)));
+}
+async function closeSink(i){
+  const b=incoming, c=b.cur; if(!c) return;
+  if(c.w){ const p = await c.w.close(); b.saved.push({name:c.f.name, size:c.f.size, path: b.mode==='native' ? p : null}); }
+  else {
+    const blob = new Blob(c.chunks, {type:c.f.type||'application/octet-stream'}); c.chunks=null;
+    const url = URL.createObjectURL(blob);
+    const item = {name:c.f.name, size:c.f.size, url};
+    b.saved.push(item); downloadItem(item);
+  }
+  b.cur=null; render(b);
+}
+/* penulis file ke disk lewat aplikasi Windows: dikumpulkan per 8 MB lalu ditulis */
+async function nativeWriter(name){
+  const h = await NATIVE.fileOpen(name);
+  const LIM = 8*1024*1024; let parts=[], size=0;
+  const flush = async () => {
+    if(!size) return;
+    const out = new Uint8Array(size); let o=0;
+    for(const p of parts){ out.set(new Uint8Array(p), o); o+=p.byteLength; }
+    parts=[]; size=0;
+    await NATIVE.fileWrite(h.id, out);
+  };
+  return {
+    name: h.name,
+    async write(buf){ parts.push(buf); size+=buf.byteLength; if(size>=LIM) await flush(); },
+    async close(){ await flush(); return NATIVE.fileClose(h.id); },
+    async abort(){ parts=[]; size=0; return NATIVE.fileAbort(h.id); }
+  };
+}
+function downloadItem(item){
+  const a=document.createElement('a'); a.href=item.url; a.download=flatName(item.name); a.rel='noopener';
+  document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),100);
+}
+function finishIncoming(){
+  const b=incoming; if(!b) return;
+  b.status='done'; b.done=b.total; stopMeter(b); render(b);
+  sendMsg({t:'ack', id:b.id, ok:true}); incoming=null; keepAwake(false);
+  toast('Selesai: '+b.meta.length+' file diterima.');
+}
+async function abortIncoming(reason){
+  const b=incoming; if(!b) return;
+  b.status='cancelled'; b.reason=reason; stopMeter(b);
+  if(b.cur && b.cur.w){ try{ await b.cur.w.abort(); }catch(e){} }
+  if(b.cur) b.cur.chunks=null; b.cur=null; incoming=null; render(b); keepAwake(false);
+}
+function failIncoming(reason){
+  const b=incoming; if(!b) return;
+  abortIncoming(reason).then(()=>{ b.status='failed'; render(b); });
+  sendMsg({t:'ack', id:b.id, ok:false});
+}
+
+/* ---------- pengukur kecepatan ---------- */
+function startMeter(b){
+  b.samples=[]; b.speed=0;
+  b.timer = setInterval(() => {
+    if(b.dir==='out'){ b.done = Math.max(0, (b.sentRaw||0) - (dc ? dc.bufferedAmount : 0)); }
+    const now=performance.now(); b.samples.push([now, b.done]);
+    while(b.samples.length>2 && now-b.samples[0][0] > 3000) b.samples.shift();
+    const [t0,d0]=b.samples[0]; b.speed = now>t0 ? (b.done-d0)/((now-t0)/1000) : 0;
+    render(b);
+  }, 500);
+}
+function stopMeter(b){ clearInterval(b.timer); b.timer=null; if(b.t0) b.avg = b.total/Math.max(.001,(performance.now()-b.t0)/1000); }
+
+/* ---------- tampilan ---------- */
+const ICON_OUT='<svg class="i" viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>';
+const ICON_IN='<svg class="i" viewBox="0 0 24 24"><path d="M17 7 7 17"/><path d="M16 17H7V8"/></svg>';
+const STATUS = {
+  queue:['Antre',''], wait:['Menunggu diterima',''], offer:['Masuk','run'], run:['Berjalan','run'],
+  done:['Selesai','done'], rejected:['Ditolak','err'], cancelled:['Dibatalkan','err'], failed:['Gagal','err']
+};
+let raf=new Set(), rafId=0;
+function taskbar(){
+  if(!NATIVE) return;
+  let tot=0, done=0;
+  batches.forEach(x => { if(x.status==='run'){ tot+=x.total; done+=x.done; } });
+  NATIVE.progress(tot ? Math.min(1, done/tot) : -1);
+}
+function render(b){ raf.add(b); if(!rafId) rafId=requestAnimationFrame(()=>{ rafId=0; raf.forEach(draw); raf.clear(); taskbar(); }); }
+function draw(b){
+  $('emptyList').hidden = true;
+  if(!b.el){
+    b.el=document.createElement('article'); b.el.className='tx '+(b.dir==='in'?'in':'out');
+    $('list').prepend(b.el);
+  }
+  const n=b.meta.length, first=baseName(b.meta[0].name);
+  const title = n===1 ? first : first+' +'+(n-1)+' file';
+  const [st, cls] = STATUS[b.status] || ['',''];
+  const pct = b.total ? Math.min(100, b.done/b.total*100) : (b.status==='done'?100:0);
+  const left = b.total-b.done;
+  let stats='';
+  if(b.status==='run') stats = '<div class="stats"><span>'+fmt(b.done)+' / '+fmt(b.total)+' · '+pct.toFixed(0)+'%</span><span class="spd">'+fmtSpd(b.speed||0)+'</span><span>sisa '+fmtEta(left/(b.speed||1e-9))+'</span></div>';
+  else if(b.status==='done') stats = '<div class="stats"><span>'+fmt(b.total)+'</span><span>rata-rata '+fmtSpd(b.avg||0)+'</span></div>';
+  else if(b.reason) stats = '<div class="stats"><span>'+esc(b.reason)+'</span></div>';
+  const who = b.dir==='in' ? 'Dari '+esc(b.from||'perangkat') : 'Ke '+esc(peerLabel||'perangkat');
+  let filesHtml='';
+  if(b.dir==='in' && b.saved && b.saved.length){
+    filesHtml = '<ul class="files">'+b.saved.slice(-50).map((s,k)=>'<li><span>'+esc(s.name)+'</span>'+(s.url?'<button class="small" data-dl="'+k+'">Simpan</button>':s.path?'<span class="row" style="margin:0;gap:6px;flex-wrap:nowrap"><button class="small" data-open="'+k+'">Buka</button><button class="small ghost" data-show="'+k+'">Folder</button></span>':'<span class="sz">tersimpan</span>')+'</li>').join('')+'</ul>';
+  } else if(b.status==='offer' || n>1){
+    const show=b.meta.slice(0,5);
+    filesHtml = '<ul class="files">'+show.map(f=>'<li><span>'+esc(f.name)+'</span><span class="sz">'+fmt(f.size)+'</span></li>').join('')+(n>5?'<li><span>…dan '+(n-5)+' file lain</span></li>':'')+'</ul>';
+  }
+  let actions='';
+  if(b.status==='offer') actions='<div class="row"><button class="small" data-act="reject">Tolak</button><button class="small primary" data-act="accept">Terima '+fmt(b.total)+'</button></div>';
+  else if(b.status==='run' || b.status==='wait' || b.status==='queue') actions='<div class="row"><button class="small ghost" data-act="cancel">Batalkan</button></div>';
+  b.el.innerHTML =
+    '<div class="tx-head"><div class="dir">'+(b.dir==='in'?ICON_IN:ICON_OUT)+'</div>'+
+    '<div class="tx-title"><b title="'+esc(title)+'">'+esc(title)+'</b><small>'+who+' · '+n+' file · '+fmt(b.total)+'</small></div>'+
+    '<span class="badge '+cls+'">'+st+'</span></div>'+
+    (b.status==='run'||b.status==='done' ? '<div class="bar"><i style="width:'+pct+'%"></i></div>' : '')+
+    stats+filesHtml+actions;
+  b.el.querySelectorAll('[data-act]').forEach(btn => btn.onclick = () => {
+    const a=btn.dataset.act;
+    if(a==='accept') acceptIncoming(b);
+    else if(a==='reject') rejectIncoming(b);
+    else if(a==='cancel'){
+      if(b.dir==='out'){ b.cancel=true; if(b.status!=='run'){ b.status='cancelled'; resolve(b.id,'reject'); const qi=sendQueue.indexOf(b); if(qi>=0) sendQueue.splice(qi,1); if(b.status==='cancelled') sendMsg({t:'cancel', id:b.id}); render(b);} }
+      else { sendMsg({t:'cancel', id:b.id}); abortIncoming('Dibatalkan'); }
+    }
+  });
+  b.el.querySelectorAll('[data-open]').forEach(btn => btn.onclick = () => { const s=b.saved.slice(-50)[+btn.dataset.open]; if(s && NATIVE) NATIVE.openFile(s.path); });
+  b.el.querySelectorAll('[data-show]').forEach(btn => btn.onclick = () => { const s=b.saved.slice(-50)[+btn.dataset.show]; if(s && NATIVE) NATIVE.showFile(s.path); });
+  b.el.querySelectorAll('[data-dl]').forEach(btn => btn.onclick = () => { const s=b.saved.slice(-50)[+btn.dataset.dl]; if(s) downloadItem(s); });
+}
+
+/* ---------- pilih & seret ---------- */
+$('pickFiles').onchange = e => { queueFiles(e.target.files); e.target.value=''; };
+$('pickDir').onchange = e => { queueFiles(e.target.files); e.target.value=''; };
+const drop=$('drop');
+['dragenter','dragover'].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => document.addEventListener(ev, e => { if(ev==='dragleave' && e.relatedTarget) return; drop.classList.remove('over'); }));
+document.addEventListener('drop', e => { e.preventDefault(); if(e.dataTransfer && e.dataTransfer.files.length) queueFiles(e.dataTransfer.files); });
+document.addEventListener('paste', e => { if(e.clipboardData && e.clipboardData.files.length && conn && conn.open) queueFiles(e.clipboardData.files); });
+
+/* ---------- mulai ---------- */
+const saved = cleanCode(store.get('klm-code'));
+(async () => {
+  if(NATIVE){
+    try{ NINFO = await NATIVE.info(); showDirFn && showDirFn(NINFO.saveDir); }catch(e){}
+    if(!store.get('klm-name')) $('devName').value = 'PC Windows';
+  }
+  startPeer(saved.length===6 ? saved : genCode());
+})();
+};
+</script>
+</body>
+</html>
