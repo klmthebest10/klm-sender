@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KLM Sender</title>
-<meta name="theme-color" content="#2F5BFF">
+<meta name="theme-color" content="#FFC700">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -13,136 +13,189 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
-/* Layout: satu kolom, kartu kode perangkat sebagai pusat, lalu hubungkan → kirim → riwayat */
+/* Layout: satu kolom. Bagian atas = kaca (glass) di atas gumpalan kuning; kartu di bawahnya timbul (neumorphism) */
 :root{
-  --bg:#F2F4F8; --surface:#FFFFFF; --sunk:#EAEEF5; --ink:#0B1220; --muted:#5A6476; --line:#DFE4EC;
-  --accent:#2F5BFF; --accent-soft:#E6ECFF; --on-accent:#FFFFFF;
-  --ok:#0F9D63; --ok-soft:#DDF5EA; --warn:#B57A00; --err:#D6363C; --err-soft:#FDE6E7;
+  --bg:#ECEBE4; --hi:#FFFFFF; --lo:#C8C6BB; --ink:#121212; --muted:#5F5D55; --line:rgba(0,0,0,.08);
+  --yellow:#FFC700; --yellow-deep:#E6A800; --on-yellow:#121212; --black:#121212; --on-black:#FFC700;
+  --glass:rgba(255,255,255,.42); --glass-line:rgba(255,255,255,.75); --glass-shadow:0 10px 40px rgba(30,25,0,.12);
+  --blob-a:#FFD43B; --blob-b:#FFB800; --blob-c:#2A2A2A;
+  --ok:#1E8E4E; --err:#D6363C;
+  --raise:6px 6px 14px var(--lo),-6px -6px 14px var(--hi);
+  --raise-sm:3px 3px 7px var(--lo),-3px -3px 7px var(--hi);
+  --inset:inset 4px 4px 9px var(--lo),inset -4px -4px 9px var(--hi);
+  --inset-sm:inset 2px 2px 5px var(--lo),inset -2px -2px 5px var(--hi);
   --f-display:"Sora",system-ui,sans-serif; --f-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
-  --r:16px; color-scheme:light;
+  --r:22px; color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0A0E15; --surface:#121925; --sunk:#0E141E; --ink:#E9EEF6; --muted:#8D98AB; --line:#222C3B;
-  --accent:#6283FF; --accent-soft:#1A2547; --on-accent:#FFFFFF;
-  --ok:#2BC587; --ok-soft:#0F2A20; --warn:#E3B341; --err:#F0686C; --err-soft:#33161A; color-scheme:dark}}
+  --bg:#1D1D1F; --hi:#2A2A2D; --lo:#0F0F10; --ink:#F4F3EE; --muted:#A3A198; --line:rgba(255,255,255,.07);
+  --yellow:#FFCC14; --yellow-deep:#FFB800; --on-yellow:#121212; --black:#0B0B0C; --on-black:#FFCC14;
+  --glass:rgba(40,40,42,.45); --glass-line:rgba(255,255,255,.12); --glass-shadow:0 10px 40px rgba(0,0,0,.45);
+  --blob-a:#FFC400; --blob-b:#B88700; --blob-c:#000000;
+  --ok:#3DDC84; --err:#FF6B6F; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0A0E15; --surface:#121925; --sunk:#0E141E; --ink:#E9EEF6; --muted:#8D98AB; --line:#222C3B;
-  --accent:#6283FF; --accent-soft:#1A2547; --on-accent:#FFFFFF;
-  --ok:#2BC587; --ok-soft:#0F2A20; --warn:#E3B341; --err:#F0686C; --err-soft:#33161A; color-scheme:dark}
+  --bg:#1D1D1F; --hi:#2A2A2D; --lo:#0F0F10; --ink:#F4F3EE; --muted:#A3A198; --line:rgba(255,255,255,.07);
+  --yellow:#FFCC14; --yellow-deep:#FFB800; --on-yellow:#121212; --black:#0B0B0C; --on-black:#FFCC14;
+  --glass:rgba(40,40,42,.45); --glass-line:rgba(255,255,255,.12); --glass-shadow:0 10px 40px rgba(0,0,0,.45);
+  --blob-a:#FFC400; --blob-b:#B88700; --blob-c:#000000;
+  --ok:#3DDC84; --err:#FF6B6F; color-scheme:dark}
 *{box-sizing:border-box}
 html,body{margin:0}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased;
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased;position:relative;overflow-x:hidden;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 [hidden]{display:none!important}
-.wrap{max-width:560px;margin:0 auto;padding-block:20px 48px;display:flex;flex-direction:column;gap:14px}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:4px 6px}
-.brand{display:flex;align-items:center;gap:10px;font:700 19px/1 var(--f-display);letter-spacing:-.02em}
-.mark{width:34px;height:34px;border-radius:10px;background:var(--accent);display:grid;place-items:center}
+/* gumpalan warna di belakang kaca */
+.blobs{position:absolute;inset:0 0 auto 0;height:520px;overflow:hidden;pointer-events:none;z-index:0}
+.blobs i{position:absolute;border-radius:50%;filter:blur(46px);opacity:.9}
+.blobs i:nth-child(1){width:300px;height:300px;background:var(--blob-a);top:-60px;right:-40px;animation:drift 14s ease-in-out infinite alternate}
+.blobs i:nth-child(2){width:240px;height:240px;background:var(--blob-b);top:150px;left:-70px;animation:drift 18s ease-in-out infinite alternate-reverse}
+.blobs i:nth-child(3){width:160px;height:160px;background:var(--blob-c);top:70px;left:40%;opacity:.35;animation:drift 22s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(30px,40px) scale(1.08)}}
+.wrap{position:relative;z-index:1;max-width:560px;margin:0 auto;padding-block:16px 48px;display:flex;flex-direction:column;gap:18px}
+/* kaca */
+.glass{background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--glass-shadow);
+  -webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px 10px 14px;border-radius:20px}
+.brand{display:flex;align-items:center;gap:10px;font:700 18px/1 var(--f-display);letter-spacing:-.02em;white-space:nowrap}
+.mark{width:36px;height:36px;border-radius:11px;background:var(--black);display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.25)}
 .mark svg{width:20px;height:20px}
-.pill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;padding:7px 12px;border-radius:99px;color:var(--muted);white-space:nowrap;background:var(--glass);border:1px solid var(--glass-line)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
-.pill.ready .dot{background:var(--ok)} .pill.linked{color:var(--ok);border-color:transparent;background:var(--ok-soft)} .pill.linked .dot{background:var(--ok)}
-.pill.busy .dot{background:var(--warn);animation:pulse 1.2s infinite} .pill.bad .dot{background:var(--err)}
+.pill.ready .dot{background:var(--ok)}
+.pill.linked{background:var(--black);color:var(--on-black);border-color:transparent} .pill.linked .dot{background:var(--yellow);box-shadow:0 0 8px var(--yellow)}
+.pill.busy .dot{background:var(--yellow-deep);animation:pulse 1.2s infinite} .pill.bad .dot{background:var(--err)}
 @keyframes pulse{50%{opacity:.3}}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
-.label{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
-/* kode perangkat */
+/* kartu timbul */
+.card{background:var(--bg);border-radius:var(--r);padding:20px;box-shadow:var(--raise)}
+.hero{border-radius:26px;padding:20px}
+.label{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
 .me{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center}
-.code{font:700 clamp(34px,10vw,46px)/1 var(--f-mono);letter-spacing:.06em;display:flex;align-items:center;gap:.25em;user-select:all}
-.code span:nth-child(2){color:var(--muted);font-weight:500}
-.qr{width:104px;height:104px;background:#fff;border-radius:12px;padding:6px;border:1px solid var(--line)}
+.code{font:700 clamp(34px,10vw,46px)/1 var(--f-mono);letter-spacing:.06em;display:flex;align-items:center;gap:.22em;user-select:all}
+.code span:nth-child(2){width:.5em;height:.16em;border-radius:4px;background:var(--yellow);color:transparent;overflow:hidden;font-size:inherit}
+.qr{width:108px;height:108px;background:#fff;border-radius:16px;padding:8px;box-shadow:0 6px 18px rgba(0,0,0,.12);border:3px solid var(--yellow)}
 .qr svg{width:100%;height:100%;display:block}
-.qr.empty{background:var(--sunk)}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.me .row{margin-top:14px}
+.qr.empty{background:var(--glass);border-color:var(--glass-line)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.hero .row{margin-top:16px}
 .devname{display:flex;align-items:center;gap:6px;margin-top:12px;color:var(--muted);font-size:13px}
-.devname input{border:0;background:transparent;color:var(--ink);font:600 13px var(--f-body);padding:2px 4px;border-bottom:1px dashed var(--line);min-width:0;width:12em}
-.devname input:focus{outline:none;border-bottom-color:var(--accent)}
+.devname input{border:0;background:transparent;color:var(--ink);font:700 13px var(--f-body);padding:2px 4px;border-bottom:1.5px dashed var(--muted);min-width:0;width:12em}
+.devname input:focus{outline:none;border-bottom-color:var(--yellow-deep)}
 /* tombol */
-button,.btn{font:600 14px var(--f-body);border-radius:11px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;justify-content:center;transition:background .15s,border-color .15s,transform .05s}
-button:hover{border-color:var(--muted)} button:active{transform:scale(.98)}
-button:focus-visible,input:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)} .primary:hover{border-color:var(--accent);filter:brightness(1.08)}
-.ghost{background:transparent;border-color:transparent;color:var(--muted);padding:8px 10px} .ghost:hover{color:var(--ink);border-color:transparent;background:var(--sunk)}
-.small{font-size:13px;padding:7px 11px;border-radius:9px}
+button,.btn{font:700 14px var(--f-body);border-radius:14px;border:0;background:var(--bg);color:var(--ink);padding:11px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;justify-content:center;
+  box-shadow:var(--raise-sm);transition:box-shadow .15s,transform .05s,background .15s}
+button:hover,.btn:hover{color:var(--ink)}
+button:active,.btn:active{box-shadow:var(--inset-sm)}
+.hero button{background:var(--glass);border:1px solid var(--glass-line);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.hero button:active{box-shadow:inset 0 2px 6px rgba(0,0,0,.12)}
+button:focus-visible,input:focus-visible,.btn:focus-within{outline:2px solid var(--yellow-deep);outline-offset:3px}
+.primary,.hero .primary{background:var(--yellow);color:var(--on-yellow);border:0;box-shadow:0 6px 16px color-mix(in srgb,var(--yellow) 45%,transparent),inset 0 -2px 0 rgba(0,0,0,.12)}
+.primary:active{box-shadow:inset 0 3px 8px rgba(0,0,0,.2)}
+.dark{background:var(--black);color:var(--on-black);box-shadow:0 6px 14px rgba(0,0,0,.25)}
+.ghost,.hero .ghost{background:transparent;border-color:transparent;box-shadow:none;color:var(--muted);padding:8px 10px}
+.ghost:hover{color:var(--ink)}
+.small{font-size:13px;padding:8px 12px;border-radius:12px}
 button:disabled{opacity:.45;cursor:not-allowed}
 svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 /* hubungkan */
-.connect{display:flex;gap:8px}
-.connect input{flex:1;min-width:0;font:700 22px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;padding:10px 14px;border-radius:11px;border:1px solid var(--line);background:var(--sunk);color:var(--ink)}
-.connect input::placeholder{color:var(--muted);opacity:.5;letter-spacing:.14em}
+.connect{display:flex;gap:10px}
+.connect input{flex:1;min-width:0;font:700 22px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;padding:12px 16px;border-radius:14px;border:0;background:var(--bg);color:var(--ink);box-shadow:var(--inset)}
+.connect input::placeholder{color:var(--muted);opacity:.45;letter-spacing:.14em}
+.icon-btn{width:50px;padding:0;flex:none}
+.pairs{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.pairs span{font-size:12px;font-weight:700;color:var(--muted);padding:5px 10px;border-radius:99px;box-shadow:var(--inset-sm)}
+.recent{margin-top:16px}
+.recent .row{gap:8px}
+.chip{font-size:13px;padding:7px 12px;border-radius:99px}
+.chip b{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-weight:700}
 .peer{display:flex;align-items:center;gap:12px}
-.avatar{width:42px;height:42px;border-radius:12px;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;flex:none}
+.avatar{width:46px;height:46px;border-radius:14px;background:var(--black);color:var(--on-black);display:grid;place-items:center;flex:none}
 .peer .who{flex:1;min-width:0}
 .peer b{display:block;font:600 16px var(--f-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .peer small{color:var(--muted);font-size:12.5px}
-.hint{color:var(--muted);font-size:13px;margin:10px 0 0}
+.hint{color:var(--muted);font-size:13px;margin:12px 0 0}
+.hint b{color:var(--ink)}
 /* drop */
-.drop{border:1.5px dashed var(--line);border-radius:var(--r);padding:26px 18px;text-align:center;background:var(--surface);transition:border-color .15s,background .15s}
-.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop{border-radius:var(--r);padding:28px 18px;text-align:center;background:var(--bg);box-shadow:var(--inset);transition:box-shadow .2s,opacity .2s}
+.drop.over{box-shadow:var(--inset),0 0 0 3px var(--yellow)}
 .drop.off{opacity:.55}
-.drop h2{font:600 18px var(--f-display);margin:8px 0 4px;letter-spacing:-.01em}
-.drop p{margin:0 0 16px;color:var(--muted);font-size:13.5px}
-.drop .big{width:44px;height:44px;margin:0 auto;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.drop h2{font:600 19px var(--f-display);margin:12px 0 4px;letter-spacing:-.01em}
+.drop p{margin:0 0 18px;color:var(--muted);font-size:13.5px}
+.drop .big{width:56px;height:56px;margin:0 auto;border-radius:18px;background:var(--black);color:var(--on-black);display:grid;place-items:center;box-shadow:0 8px 18px rgba(0,0,0,.25)}
 .drop .row{justify-content:center}
 /* transfer */
-.list{display:flex;flex-direction:column;gap:10px}
-.empty-list{color:var(--muted);font-size:13.5px;text-align:center;padding:18px;border-radius:var(--r);background:var(--sunk)}
-.tx{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.list{display:flex;flex-direction:column;gap:14px}
+.empty-list{color:var(--muted);font-size:13.5px;text-align:center;padding:20px;border-radius:var(--r);box-shadow:var(--inset-sm)}
+.tx{background:var(--bg);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--raise)}
 .tx-head{display:flex;gap:12px;align-items:flex-start}
-.dir{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;background:var(--accent-soft);color:var(--accent)}
-.tx.in .dir{background:var(--ok-soft);color:var(--ok)}
+.dir{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none;background:var(--yellow);color:var(--on-yellow)}
+.tx.in .dir{background:var(--black);color:var(--on-black)}
 .tx-title{flex:1;min-width:0}
-.tx-title b{display:block;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-title b{display:block;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tx-title small{color:var(--muted);font-size:12.5px}
-.badge{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:99px;background:var(--sunk);color:var(--muted);white-space:nowrap}
-.badge.done{background:var(--ok-soft);color:var(--ok)} .badge.err{background:var(--err-soft);color:var(--err)} .badge.run{background:var(--accent-soft);color:var(--accent)}
-.bar{height:8px;border-radius:99px;background:var(--sunk);overflow:hidden}
-.bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:inherit;transition:width .25s linear}
-.tx.in .bar i{background:var(--ok)}
+.badge{font-size:11.5px;font-weight:800;padding:4px 9px;border-radius:99px;color:var(--muted);white-space:nowrap;box-shadow:var(--inset-sm)}
+.badge.done{background:var(--black);color:var(--on-black);box-shadow:none} .badge.err{color:var(--err)} .badge.run{background:var(--yellow);color:var(--on-yellow);box-shadow:none}
+.bar{height:12px;border-radius:99px;background:var(--bg);box-shadow:var(--inset-sm);overflow:hidden;padding:2px}
+.bar i{display:block;height:100%;width:0;border-radius:inherit;transition:width .25s linear;
+  background:repeating-linear-gradient(-45deg,var(--yellow) 0 10px,var(--yellow-deep) 10px 20px);background-size:28px 28px;animation:stripe 1s linear infinite}
+.tx.in .bar i{background:repeating-linear-gradient(-45deg,var(--black) 0 10px,#3a3a3a 10px 20px);background-size:28px 28px}
+@keyframes stripe{to{background-position:28px 0}}
 .stats{display:flex;justify-content:space-between;gap:10px;font:500 12.5px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;flex-wrap:wrap}
 .stats .spd{color:var(--ink);font-weight:700}
-.files{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.files{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13px}
 .files li{display:flex;gap:10px;justify-content:space-between;align-items:center;min-width:0}
 .files li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .files li .sz{font:500 12px var(--f-mono);color:var(--muted);flex:none}
 .files li button{flex:none}
 .tx .row{justify-content:flex-end}
 .note{font-size:12.5px;color:var(--muted);line-height:1.55}
-.note b{color:var(--ink);font-weight:600}
-.settings{display:flex;flex-direction:column;gap:10px}
+.note b{color:var(--ink);font-weight:700}
+.settings{display:flex;flex-direction:column;gap:12px}
 .settings .row{justify-content:space-between}
+/* sakelar */
+.switch{display:flex;align-items:center;gap:12px;cursor:pointer}
+.switch input{appearance:none;-webkit-appearance:none;width:48px;height:28px;border-radius:99px;background:var(--bg);box-shadow:var(--inset-sm);position:relative;flex:none;cursor:pointer;margin:0;transition:background .2s}
+.switch input::after{content:"";position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:var(--bg);box-shadow:var(--raise-sm);transition:transform .2s,background .2s}
+.switch input:checked{background:var(--yellow)}
+.switch input:checked::after{transform:translateX(20px);background:var(--black);box-shadow:none}
+/* pemindai QR */
+.scanner{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:rgba(0,0,0,.55);
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.scanner .glass{border-radius:26px;padding:16px;width:min(420px,100%);display:flex;flex-direction:column;gap:12px}
+.scanner video{width:100%;aspect-ratio:1;max-width:100%;object-fit:cover;border-radius:18px;background:#000;border:3px solid var(--yellow)}
+.scanner p{margin:0;font-size:13.5px;font-weight:600;text-align:center}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;
-  background:var(--ink);color:var(--bg);font-weight:600;font-size:13.5px;padding:10px 16px;border-radius:12px;transition:.2s;max-width:calc(100% - 32px);z-index:20}
+  background:var(--black);color:var(--on-black);font-weight:700;font-size:13.5px;padding:11px 18px;border-radius:14px;transition:.2s;max-width:calc(100% - 32px);z-index:40;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .toast.show{opacity:1;transform:translateX(-50%)}
-@media (max-width:420px){.qr{width:88px;height:88px}.me{gap:12px}}
+@media (max-width:420px){.qr{width:92px;height:92px}.me{gap:12px}}
+.mark,.drop .big,.avatar,.tx.in .dir,.badge.done,.dark{outline:1px solid var(--line);outline-offset:-1px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
+<div class="blobs" aria-hidden="true"><i></i><i></i><i></i></div>
 <div class="wrap">
-  <header>
+  <header class="glass">
     <div class="brand">
-      <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h13l-4-4"/><path d="M20 15H7l4 4"/></svg></div>
+      <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#FFC700" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h13l-4-4"/><path d="M20 15H7l4 4"/></svg></div>
       KLM Sender
     </div>
     <div class="row" style="margin:0;gap:8px;flex-wrap:nowrap">
-    <button class="small primary" id="installBtn" hidden><svg class="i" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>Install</button>
-    <div class="pill busy" id="status"><span class="dot"></span><span id="statusText">Menyiapkan…</span></div>
+      <button class="small primary" id="installBtn" hidden><svg class="i" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>Install</button>
+      <div class="pill busy" id="status"><span class="dot"></span><span id="statusText">Menyiapkan…</span></div>
     </div>
   </header>
-  <div class="card note" id="iosHint" hidden style="padding:12px 16px">Pasang di iPhone: ketuk tombol <b>Bagikan</b> di Safari, lalu pilih <b>Tambahkan ke Layar Utama</b>.</div>
+  <div class="glass note" id="iosHint" hidden style="padding:12px 16px;border-radius:18px">Pasang di iPhone: ketuk tombol <b>Bagikan</b> di Safari, lalu pilih <b>Tambahkan ke Layar Utama</b>.</div>
 
-  <section class="card" aria-labelledby="meLbl">
+  <section class="glass hero" aria-labelledby="meLbl">
     <div class="me">
       <div style="min-width:0">
         <p class="label" id="meLbl">Kode perangkat ini</p>
         <div class="code" id="myCode"><span>···</span><span>-</span><span>···</span></div>
         <div class="devname"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/></svg><input id="devName" aria-label="Nama perangkat" maxlength="32"></div>
       </div>
-      <div class="qr empty" id="qr" title="Pindai dengan kamera HP untuk langsung terhubung"></div>
+      <div class="qr empty" id="qr" title="Pindai dengan kamera perangkat lain untuk langsung terhubung"></div>
     </div>
     <div class="row">
       <button class="small" id="copyLink"><svg class="i" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Salin link</button>
@@ -157,9 +210,15 @@ svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-widt
     <div id="connectBox">
       <form class="connect" id="connectForm" autocomplete="off">
         <input id="peerCode" inputmode="text" maxlength="7" placeholder="ABC-123" aria-label="Kode perangkat tujuan" spellcheck="false">
+        <button class="icon-btn dark" id="scanBtn" type="button" title="Pindai QR" aria-label="Pindai QR" hidden><svg class="i" viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3"/><path d="M16 4h3a1 1 0 0 1 1 1v3"/><path d="M20 16v3a1 1 0 0 1-1 1h-3"/><path d="M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M7 12h10"/></svg></button>
         <button class="primary" id="connectBtn" type="submit">Hubungkan</button>
       </form>
-      <p class="hint">Masukkan kode yang tampil di perangkat lain, atau pindai QR-nya. Jarak dekat maupun jauh, asal keduanya online.</p>
+      <div class="pairs" aria-label="Bisa dipakai untuk"><span>PC ⇄ HP</span><span>PC ⇄ PC</span><span>HP ⇄ HP</span></div>
+      <p class="hint">Buka KLM Sender di kedua perangkat. Masukkan kode perangkat lain, atau pindai QR-nya. Jarak dekat maupun jauh, asal keduanya online.</p>
+      <div class="recent" id="recentBox" hidden>
+        <p class="label">Terakhir terhubung</p>
+        <div class="row" id="recentList"></div>
+      </div>
     </div>
     <div class="peer" id="peerBox" hidden>
       <div class="avatar"><svg class="i" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
@@ -169,7 +228,7 @@ svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-widt
   </section>
 
   <section class="drop off" id="drop" aria-labelledby="dropLbl">
-    <div class="big"><svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 20h16"/></svg></div>
+    <div class="big"><svg class="i" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 20h16"/></svg></div>
     <h2 id="dropLbl">Kirim file</h2>
     <p id="dropHint">Hubungkan ke perangkat tujuan dulu.</p>
     <div class="row">
@@ -179,7 +238,7 @@ svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-widt
   </section>
 
   <section aria-labelledby="txLbl">
-    <p class="label" id="txLbl" style="margin-left:4px">Transfer</p>
+    <p class="label" id="txLbl" style="margin-left:6px">Transfer</p>
     <div class="list" id="list"><div class="empty-list" id="emptyList">Belum ada transfer. File yang dikirim dan diterima muncul di sini.</div></div>
   </section>
 
@@ -192,13 +251,20 @@ svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-widt
         <button class="small" id="pickSave" hidden>Pilih folder simpan</button>
       </div>
     </div>
-    <label class="row toggle" for="autoAccept" style="justify-content:flex-start;cursor:pointer;margin:0">
-      <input type="checkbox" id="autoAccept"> <span class="note" style="color:var(--ink)">Terima otomatis dari perangkat yang sudah terhubung</span>
+    <label class="switch" for="autoAccept">
+      <input type="checkbox" id="autoAccept"> <span class="note" style="color:var(--ink);font-weight:600">Terima otomatis dari perangkat yang sudah terhubung</span>
     </label>
-    <p class="note" id="capNote"></p>
+    <p class="note" id="capNote" style="margin:0"></p>
   </section>
 
-  <p class="note" style="padding:0 4px">File dikirim <b>langsung antar perangkat</b> (peer-to-peer, terenkripsi DTLS), <b>ukuran asli tanpa kompres</b>. Server hanya dipakai untuk mempertemukan kedua perangkat. Jika jaringan sangat ketat, data dilewatkan relay terenkripsi.</p>
+  <p class="note" style="padding:0 6px">File dikirim <b>langsung antar perangkat</b> (peer-to-peer, terenkripsi DTLS), <b>ukuran asli tanpa kompres</b>. Server hanya dipakai untuk mempertemukan kedua perangkat. Jika jaringan sangat ketat, data dilewatkan relay terenkripsi.</p>
+</div>
+<div class="scanner" id="scanner" hidden>
+  <div class="glass">
+    <video id="scanVideo" playsinline muted></video>
+    <p id="scanMsg">Arahkan kamera ke QR di perangkat lain</p>
+    <button id="scanClose" class="dark">Tutup</button>
+  </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -373,6 +439,8 @@ function setupConn(c){
     if(conn!==c) return;
     dc = c.dataChannel; dc.binaryType='arraybuffer'; dc.bufferedAmountLowThreshold = LOW;
     peerLabel = (c.metadata && c.metadata.name) || 'Perangkat';
+    peerCodeNow = String(c.peer||'').replace(PREFIX,'');
+    rememberPeer(peerCodeNow, peerLabel);
     showPeer(true);
     sendMsg({t:'hello', name:myName()});
     runQueue();
@@ -422,6 +490,62 @@ function sendMsg(o){ if(dc && dc.readyState==='open'){ try{ dc.send(JSON.stringi
 function wait(key){ return new Promise(r => waiters.set(key, r)); }
 function resolve(key, v){ const f=waiters.get(key); if(f){ waiters.delete(key); f(v); } }
 function drain(){ return new Promise(r => { if(!dc || dc.bufferedAmount<=LOW) return r(); const h=()=>{ dc && dc.removeEventListener('bufferedamountlow',h); clearInterval(iv); r(); }; const iv=setInterval(()=>{ if(!dc||dc.readyState!=='open'||dc.bufferedAmount<=LOW) h(); },200); dc.addEventListener('bufferedamountlow',h); }); }
+
+/* ---------- perangkat terakhir (untuk PC⇄PC, HP⇄HP, PC⇄HP) ---------- */
+let peerCodeNow='';
+function loadRecent(){ try{ return JSON.parse(store.get('klm-recent')||'[]').filter(x=>x && /^[A-Z0-9]{6}$/.test(x.code)); }catch(e){ return []; } }
+function rememberPeer(code, name){
+  if(!/^[A-Z0-9]{6}$/.test(code||'')) return;
+  const list = loadRecent().filter(x=>x.code!==code);
+  list.unshift({code, name:String(name||'Perangkat').slice(0,40)});
+  store.set('klm-recent', JSON.stringify(list.slice(0,6))); renderRecent();
+}
+function renderRecent(){
+  const list=loadRecent(), box=$('recentBox'), el=$('recentList');
+  box.hidden = !list.length;
+  el.innerHTML = list.map(x=>'<button class="small chip" data-code="'+x.code+'">'+esc(x.name)+' <b>'+x.code.slice(0,3)+'-'+x.code.slice(3)+'</b></button>').join('');
+  el.querySelectorAll('[data-code]').forEach(b=>b.onclick=()=>{ const c=b.dataset.code; $('peerCode').value=c.slice(0,3)+'-'+c.slice(3); connectTo(c); });
+}
+renderRecent();
+
+/* ---------- pindai QR dengan kamera (HP Android & browser yang mendukung) ---------- */
+let scanStream=null, scanTimer=0;
+(async () => {
+  try{
+    if(!('BarcodeDetector' in window) || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    const f = await BarcodeDetector.getSupportedFormats();
+    if(f.includes('qr_code')) $('scanBtn').hidden=false;
+  }catch(e){}
+})();
+function codeFromText(t){
+  t=String(t||'').trim();
+  try{ const u=new URL(t); const c=cleanCode(u.searchParams.get('to')); if(c.length===6) return c; }catch(e){}
+  const c=cleanCode(t); return c.length===6 ? c : null;
+}
+async function openScanner(){
+  const det = new BarcodeDetector({formats:['qr_code']});
+  try{ scanStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false}); }
+  catch(e){ toast('Kamera tidak bisa dibuka. Izinkan akses kamera atau ketik kodenya.'); return; }
+  const v=$('scanVideo'); v.srcObject=scanStream; $('scanner').hidden=false; $('scanMsg').textContent='Arahkan kamera ke QR di perangkat lain';
+  try{ await v.play(); }catch(e){}
+  const tick = async () => {
+    if(!scanStream) return;
+    try{
+      const r = await det.detect(v);
+      for(const x of r){ const c=codeFromText(x.rawValue); if(c){ closeScanner(); $('peerCode').value=c.slice(0,3)+'-'+c.slice(3); connectTo(c); return; } }
+      if(r.length) $('scanMsg').textContent='QR ini bukan kode KLM Sender';
+    }catch(e){}
+    scanTimer = setTimeout(tick, 250);
+  };
+  tick();
+}
+function closeScanner(){
+  clearTimeout(scanTimer);
+  if(scanStream){ scanStream.getTracks().forEach(t=>t.stop()); scanStream=null; }
+  $('scanVideo').srcObject=null; $('scanner').hidden=true;
+}
+$('scanBtn').onclick = openScanner;
+$('scanClose').onclick = closeScanner;
 
 /* ---------- wake lock & tutup tab ---------- */
 async function keepAwake(on){
@@ -493,7 +617,7 @@ function onData(d){
   if(typeof d !== 'string'){ onChunk(d); return; }
   let m; try{ m=JSON.parse(d) }catch(e){ return; }
   switch(m.t){
-    case 'hello': peerLabel = String(m.name||'Perangkat').slice(0,40); $('peerName').textContent=peerLabel; break;
+    case 'hello': peerLabel = String(m.name||'Perangkat').slice(0,40); $('peerName').textContent=peerLabel; rememberPeer(peerCodeNow, peerLabel); break;
     case 'offer': onOffer(m); break;
     case 'accept': resolve(m.id,'accept'); break;
     case 'reject': resolve(m.id,'reject'); break;

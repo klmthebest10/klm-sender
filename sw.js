@@ -1,8 +1,8 @@
 // KLM Sender — service worker (PWA)
 // Menyimpan tampilan aplikasi agar cepat dibuka dan bisa di-install.
 // Transfer file tidak lewat service worker.
-const CACHE = 'klm-sender-v1';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './vendor/qrcode.js'];
+const CACHE = 'klm-sender-v2';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable.png', './vendor/qrcode.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

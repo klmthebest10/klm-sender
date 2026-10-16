@@ -144,7 +144,7 @@ async function createWindow() {
   await startServer();
   win = new BrowserWindow({
     width: 500, height: 860, minWidth: 380, minHeight: 560,
-    title: 'KLM Sender', backgroundColor: '#F2F4F8', autoHideMenuBar: true, show: false,
+    title: 'KLM Sender', backgroundColor: '#ECEBE4', autoHideMenuBar: true, show: false,
     icon: iconPath() ? nativeImage.createFromPath(iconPath()) : undefined,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: false }
   });
@@ -174,8 +174,9 @@ async function selfTest() {
       return { info, p, status: document.getElementById('statusText').textContent, code: document.getElementById('myCode').textContent, qr: document.getElementById('qr').innerHTML.length };
     })()`);
     fs.writeFileSync(path.join(out, 'result.json'), JSON.stringify(res, null, 2));
-    for (const [w, h, f] of [[500, 860, 'shot-light.png']]) {
-      win.setSize(w, h); await new Promise(r => setTimeout(r, 400));
+    const { nativeTheme } = require('electron');
+    for (const [w, h, f, t] of [[500, 1100, 'shot-light.png', 'light'], [500, 1100, 'shot-dark.png', 'dark']]) {
+      nativeTheme.themeSource = t; win.setSize(w, h); await new Promise(r => setTimeout(r, 800));
       const img = await win.webContents.capturePage(); fs.writeFileSync(path.join(out, f), img.toPNG());
     }
     // ambil halaman seperti dibuka HP lewat jaringan lokal
