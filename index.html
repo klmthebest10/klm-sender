@@ -168,6 +168,37 @@ svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;
   background:var(--black);color:var(--on-black);font-weight:700;font-size:13.5px;padding:11px 18px;border-radius:14px;transition:.2s;max-width:calc(100% - 32px);z-index:40;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .toast.show{opacity:1;transform:translateX(-50%)}
+/* daftar perangkat */
+.devhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.devhead .label{margin:0}
+.count{font:800 12px var(--f-mono);min-width:26px;height:26px;padding:0 8px;border-radius:99px;display:grid;place-items:center;background:var(--black);color:var(--on-black)}
+.devs{display:flex;flex-direction:column;gap:10px}
+.dev{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;box-shadow:var(--inset-sm);cursor:pointer;transition:box-shadow .15s}
+.dev.sel{box-shadow:var(--raise-sm),0 0 0 2px var(--yellow)}
+.dev-ic{width:40px;height:40px;border-radius:12px;background:var(--black);color:var(--on-black);display:grid;place-items:center;flex:none}
+.dev.sel .dev-ic{background:var(--yellow);color:var(--on-yellow)}
+.dev-who{flex:1;min-width:0}
+.dev-who b{display:block;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dev-who small{color:var(--muted);font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tick{width:24px;height:24px;border-radius:8px;box-shadow:var(--inset-sm);display:grid;place-items:center;flex:none;color:transparent}
+.dev.sel .tick{background:var(--black);color:var(--yellow);box-shadow:none}
+.tick svg{width:15px;height:15px}
+.dev .small{flex:none}
+.devs-empty{color:var(--muted);font-size:13.5px;text-align:center;padding:14px;border-radius:16px;box-shadow:var(--inset-sm)}
+.selbar{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+/* jendela isian */
+.overlay{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:rgba(0,0,0,.55);
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.overlay > .glass{border-radius:26px;padding:22px;width:min(420px,100%);display:flex;flex-direction:column;gap:14px;background:color-mix(in srgb,var(--bg) 82%,transparent)}
+.overlay h2{font:700 20px var(--f-display);margin:0;letter-spacing:-.01em}
+.overlay p{margin:0;font-size:13.5px;color:var(--muted)}
+.overlay video{width:100%;aspect-ratio:1;max-width:100%;object-fit:cover;border-radius:18px;background:#000;border:3px solid var(--yellow)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field span{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.04em}
+.field input{font:700 16px var(--f-body);padding:13px 14px;border-radius:14px;border:0;background:var(--bg);color:var(--ink);box-shadow:var(--inset);min-width:0;width:100%}
+.err{color:var(--err);font-size:13px;font-weight:700;margin:0}
+.overlay .row{justify-content:flex-end}
+.sep{height:1px;background:var(--line);margin:2px 0}
 @media (max-width:420px){.qr{width:92px;height:92px}.me{gap:12px}}
 .mark,.drop .big,.avatar,.tx.in .dir,.badge.done,.dark{outline:1px solid var(--line);outline-offset:-1px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -200,37 +231,39 @@ svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-widt
     <div class="row">
       <button class="small" id="copyLink"><svg class="i" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Salin link</button>
       <button class="small" id="copyCode">Salin kode</button>
-      <button class="small ghost" id="newCode" title="Buat kode baru">Kode baru</button>
+      <button class="small ghost" id="newCode" title="Ganti kode (butuh password)"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Ganti kode</button>
     </div>
     <p class="hint" id="lanHint" hidden></p>
   </section>
 
-  <section class="card" aria-labelledby="linkLbl">
-    <p class="label" id="linkLbl">Perangkat tujuan</p>
-    <div id="connectBox">
-      <form class="connect" id="connectForm" autocomplete="off">
-        <input id="peerCode" inputmode="text" maxlength="7" placeholder="ABC-123" aria-label="Kode perangkat tujuan" spellcheck="false">
-        <button class="icon-btn dark" id="scanBtn" type="button" title="Pindai QR" aria-label="Pindai QR" hidden><svg class="i" viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3"/><path d="M16 4h3a1 1 0 0 1 1 1v3"/><path d="M20 16v3a1 1 0 0 1-1 1h-3"/><path d="M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M7 12h10"/></svg></button>
-        <button class="primary" id="connectBtn" type="submit">Hubungkan</button>
-      </form>
-      <div class="pairs" aria-label="Bisa dipakai untuk"><span>PC ⇄ HP</span><span>PC ⇄ PC</span><span>HP ⇄ HP</span></div>
-      <p class="hint">Buka KLM Sender di kedua perangkat. Masukkan kode perangkat lain, atau pindai QR-nya. Jarak dekat maupun jauh, asal keduanya online.</p>
-      <div class="recent" id="recentBox" hidden>
-        <p class="label">Terakhir terhubung</p>
-        <div class="row" id="recentList"></div>
-      </div>
+  <section class="card" aria-labelledby="devLbl">
+    <div class="devhead"><p class="label" id="devLbl">Perangkat terhubung</p><span class="count" id="devCount">0</span></div>
+    <div class="devs" id="devList"></div>
+    <div class="selbar" id="selBar" hidden>
+      <button class="small ghost" id="selNone">Kosongkan pilihan</button>
+      <button class="small" id="selAll">Pilih semua</button>
     </div>
-    <div class="peer" id="peerBox" hidden>
-      <div class="avatar"><svg class="i" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
-      <div class="who"><b id="peerName">Perangkat</b><small id="peerInfo">Terhubung langsung</small></div>
-      <button class="small" id="disconnectBtn">Putuskan</button>
+  </section>
+
+  <section class="card" aria-labelledby="linkLbl">
+    <p class="label" id="linkLbl">Tambah perangkat</p>
+    <form class="connect" id="connectForm" autocomplete="off">
+      <input id="peerCode" inputmode="text" maxlength="7" placeholder="ABC-123" aria-label="Kode perangkat tujuan" spellcheck="false">
+      <button class="icon-btn dark" id="scanBtn" type="button" title="Pindai QR" aria-label="Pindai QR" hidden><svg class="i" viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3"/><path d="M16 4h3a1 1 0 0 1 1 1v3"/><path d="M20 16v3a1 1 0 0 1-1 1h-3"/><path d="M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M7 12h10"/></svg></button>
+      <button class="primary" id="connectBtn" type="submit">Hubungkan</button>
+    </form>
+    <div class="pairs" aria-label="Bisa dipakai untuk"><span>PC ⇄ HP</span><span>PC ⇄ PC</span><span>HP ⇄ HP</span><span>Banyak sekaligus</span></div>
+    <p class="hint" id="connectHint">Masukkan kode perangkat lain atau pindai QR-nya. Bisa menambah banyak perangkat, jarak dekat maupun jauh.</p>
+    <div class="recent" id="recentBox" hidden>
+      <p class="label">Terakhir terhubung</p>
+      <div class="row" id="recentList"></div>
     </div>
   </section>
 
   <section class="drop off" id="drop" aria-labelledby="dropLbl">
     <div class="big"><svg class="i" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 20h16"/></svg></div>
     <h2 id="dropLbl">Kirim file</h2>
-    <p id="dropHint">Hubungkan ke perangkat tujuan dulu.</p>
+    <p id="dropHint">Hubungkan perangkat dulu.</p>
     <div class="row">
       <label class="btn primary" id="pickFilesLbl"><input type="file" id="pickFiles" multiple hidden>Pilih file</label>
       <label class="btn" id="pickDirLbl"><input type="file" id="pickDir" webkitdirectory multiple hidden>Pilih folder</label>
@@ -243,7 +276,7 @@ svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-widt
   </section>
 
   <section class="card settings" aria-labelledby="setLbl">
-    <p class="label" id="setLbl" style="margin:0">Penyimpanan</p>
+    <p class="label" id="setLbl" style="margin:0">Pengaturan</p>
     <div class="row">
       <div class="note" id="saveInfo" style="min-width:0;overflow-wrap:anywhere">File diterima disimpan ke folder Unduhan.</div>
       <div class="row" style="margin:0">
@@ -252,20 +285,49 @@ svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-widt
       </div>
     </div>
     <label class="switch" for="autoAccept">
-      <input type="checkbox" id="autoAccept"> <span class="note" style="color:var(--ink);font-weight:600">Terima otomatis dari perangkat yang sudah terhubung</span>
+      <input type="checkbox" id="autoAccept"> <span class="note" style="color:var(--ink);font-weight:600">Terima otomatis dari perangkat yang terhubung</span>
     </label>
     <p class="note" id="capNote" style="margin:0"></p>
+    <div class="sep"></div>
+    <div class="row">
+      <div class="note" id="pwdInfo" style="min-width:0;flex:1"></div>
+      <button class="small" id="pwdBtn">Atur password</button>
+    </div>
   </section>
 
-  <p class="note" style="padding:0 6px">File dikirim <b>langsung antar perangkat</b> (peer-to-peer, terenkripsi DTLS), <b>ukuran asli tanpa kompres</b>. Server hanya dipakai untuk mempertemukan kedua perangkat. Jika jaringan sangat ketat, data dilewatkan relay terenkripsi.</p>
+  <p class="note" style="padding:0 6px">File dikirim <b>ukuran asli tanpa kompres</b>. Di Wi-Fi yang sama lewat aplikasi PC, file mengalir langsung lewat jaringan lokal dan <b>tidak butuh internet</b>. Jarak jauh memakai koneksi langsung antar perangkat (peer-to-peer, terenkripsi).</p>
 </div>
-<div class="scanner" id="scanner" hidden>
+
+<div class="overlay" id="scanner" hidden>
   <div class="glass">
     <video id="scanVideo" playsinline muted></video>
-    <p id="scanMsg">Arahkan kamera ke QR di perangkat lain</p>
+    <p id="scanMsg" style="text-align:center;color:var(--ink);font-weight:600">Arahkan kamera ke QR di perangkat lain</p>
     <button id="scanClose" class="dark">Tutup</button>
   </div>
 </div>
+
+<div class="overlay" id="nameModal" hidden>
+  <form class="glass" id="nameForm" autocomplete="off">
+    <h2>Beri nama perangkat ini</h2>
+    <p>Nama ini tampil di perangkat lain sebagai identitas, misalnya "Laptop Kantor" atau "HP Andi".</p>
+    <label class="field"><span>NAMA PERANGKAT</span><input id="nameInput" maxlength="32" required></label>
+    <p class="err" id="nameErr" hidden></p>
+    <div class="row"><button class="primary" type="submit">Simpan</button></div>
+  </form>
+</div>
+
+<div class="overlay" id="pwModal" hidden>
+  <form class="glass" id="pwForm" autocomplete="off">
+    <h2 id="pwTitle">Password</h2>
+    <p id="pwText"></p>
+    <label class="field" id="pwOldF"><span>PASSWORD</span><input id="pwOld" type="password" autocomplete="current-password"></label>
+    <label class="field" id="pwNewF"><span>PASSWORD BARU</span><input id="pwNew" type="password" autocomplete="new-password"></label>
+    <label class="field" id="pwNew2F"><span>ULANGI PASSWORD BARU</span><input id="pwNew2" type="password" autocomplete="new-password"></label>
+    <p class="err" id="pwErr" hidden></p>
+    <div class="row"><button type="button" class="ghost" id="pwCancel">Batal</button><button class="primary" type="submit" id="pwOk">Lanjut</button></div>
+  </form>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -289,35 +351,42 @@ svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-widt
 })();
 </script>
 <script>
-/* Muat komponen: coba file lokal dulu, lalu beberapa CDN cadangan */
+/* Muat komponen: file lokal dulu, lalu CDN cadangan. Tanpa internet aplikasi tetap jalan lewat Wi-Fi lokal. */
+window.KLM_PEER_URLS = ['vendor/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
+window.klmLoadScript = src => new Promise(res => { const s=document.createElement('script'); s.src=src; s.onload=()=>res(true); s.onerror=()=>{ s.remove(); res(false); }; document.head.appendChild(s); });
 (function(){
   const deps = [
-    { test: () => typeof Peer !== 'undefined', urls: ['vendor/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'] },
-    { test: () => typeof qrcode !== 'undefined', urls: ['vendor/qrcode.js','https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js','https://unpkg.com/qrcode-generator@1.4.4/qrcode.js'] }
+    { test: () => typeof qrcode !== 'undefined', urls: ['vendor/qrcode.js','https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js','https://unpkg.com/qrcode-generator@1.4.4/qrcode.js'] },
+    { test: () => typeof Peer !== 'undefined', urls: window.KLM_PEER_URLS }
   ];
-  const load = src => new Promise(res => { const s=document.createElement('script'); s.src=src; s.onload=()=>res(true); s.onerror=()=>{ s.remove(); res(false); }; document.head.appendChild(s); });
   (async () => {
-    for(const d of deps){ for(const u of d.urls){ if(d.test()) break; await load(u); } }
+    for(const d of deps){ for(const u of d.urls){ if(d.test()) break; await window.klmLoadScript(u); } }
     window.__klmStart && window.__klmStart();
   })();
 })();
 </script>
 <script>
-window.__klmStart = () => {
+window.__klmStart = async () => {
 'use strict';
 const NATIVE = window.klmNative || null;   // ada saat berjalan sebagai aplikasi Windows
-let NINFO = null, showDirFn = null;
 const PREFIX = 'klmsender-v1-';
 const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const CHUNK = 64 * 1024;            // ukuran paket data channel
-const READ = 4 * 1024 * 1024;       // baca file per 4 MB
-const HIGH = 12 * 1024 * 1024, LOW = 2 * 1024 * 1024; // backpressure
-const BIG_TO_DISK = 300 * 1024 * 1024; // di atas ini, tulis langsung ke disk bila bisa
-
+const CHUNK = 64 * 1024, READ = 4 * 1024 * 1024;
+const HIGH = 12 * 1024 * 1024, LOW = 2 * 1024 * 1024;
+const BIG_TO_DISK = 300 * 1024 * 1024;
 const $ = id => document.getElementById(id);
+
+/* ---------- penyimpanan pengaturan ---------- */
+let NINFO = null, KV = {};
+if(NATIVE){
+  try{ NINFO = await NATIVE.info(); KV = NINFO.kv || {}; }catch(e){}
+  if(!KV['klm-code']){ // pindahkan data lama
+    try{ for(const k of ['klm-code','klm-name','klm-recent','klm-auto']){ const v=localStorage.getItem(k); if(v!=null){ KV[k]=v; NATIVE.kvSet(k,v); } } }catch(e){}
+  }
+}
 const store = {
-  get(k){ try{ return localStorage.getItem(k) }catch(e){ return null } },
-  set(k,v){ try{ localStorage.setItem(k,v) }catch(e){} }
+  get(k){ if(NATIVE) return (k in KV) ? KV[k] : null; try{ return localStorage.getItem(k) }catch(e){ return null } },
+  set(k,v){ if(NATIVE){ KV[k]=v; NATIVE.kvSet(k,v); return; } try{ localStorage.setItem(k,v) }catch(e){} }
 };
 
 /* ---------- util ---------- */
@@ -326,63 +395,88 @@ const fmtSpd = bps => fmt(bps) + '/s';
 const fmtEta = s => { if(!isFinite(s) || s<0) return '—'; s=Math.round(s); if(s<60) return s+' dtk'; const m=Math.floor(s/60); if(m<60) return m+' mnt '+(s%60)+' dtk'; return Math.floor(m/60)+' jam '+(m%60)+' mnt'; };
 const genCode = () => { const a=new Uint32Array(6); crypto.getRandomValues(a); return Array.from(a,x=>ALPHA[x%ALPHA.length]).join(''); };
 const cleanCode = s => (s||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
-const uid = () => Math.random().toString(36).slice(2,10);
+const fmtCode = c => c ? c.slice(0,3)+'-'+c.slice(3) : '';
+const uid = () => { const a=new Uint32Array(2); crypto.getRandomValues(a); return a[0].toString(36)+a[1].toString(36); };
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let toastT;
-function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2800); }
-function setStatus(cls, text){ const s=$('status'); s.className='pill '+cls; $('statusText').textContent=text; }
-function guessDevice(){
-  const ua=navigator.userAgent;
-  if(/iPhone/.test(ua)) return 'iPhone'; if(/iPad/.test(ua)) return 'iPad';
-  if(/Android/.test(ua)) return /Mobile/.test(ua)?'HP Android':'Tablet Android';
-  if(/Windows/.test(ua)) return 'PC Windows'; if(/Mac OS/.test(ua)) return 'Mac'; if(/Linux/.test(ua)) return 'PC Linux';
-  return 'Perangkat';
-}
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3000); }
+function setStatus(cls, text){ $('status').className='pill '+cls; $('statusText').textContent=text; }
+const guessKind = () => /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ? 'hp' : 'pc';
 async function copy(text, msg){
   try{ await navigator.clipboard.writeText(text); toast(msg); }
   catch(e){ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); toast(msg);}catch(_){ toast(text);} ta.remove(); }
 }
+// SHA-256 tanpa crypto.subtle (halaman Wi-Fi lokal berjalan di http)
+function sha256(str){
+  const rr=(v,a)=>(v>>>a)|(v<<(32-a)), maxWord=2**32, H=[], K=[], comp={};
+  for(let c=2,n=0;n<64;c++){ if(!comp[c]){ for(let i=0;i<313;i+=c) comp[i]=c; if(n<8) H[n]=(Math.pow(c,.5)*maxWord)|0; K[n++]=(Math.pow(c,1/3)*maxWord)|0; } }
+  const bytes=Array.from(new TextEncoder().encode(str)), bitLen=bytes.length*8;
+  bytes.push(0x80); while(bytes.length%64!==56) bytes.push(0);
+  const words=[]; for(let i=0;i<bytes.length;i+=4) words.push((bytes[i]<<24)|(bytes[i+1]<<16)|(bytes[i+2]<<8)|bytes[i+3]);
+  words.push((bitLen/maxWord)|0, bitLen>>>0);
+  let hash=H.slice(0,8);
+  for(let j=0;j<words.length;){
+    const w=words.slice(j,j+=16), old=hash; hash=hash.slice(0,8);
+    for(let i=0;i<64;i++){
+      const w15=w[i-15], w2=w[i-2], a=hash[0], e=hash[4];
+      const t1=hash[7]+(rr(e,6)^rr(e,11)^rr(e,25))+((e&hash[5])^(~e&hash[6]))+K[i]+(w[i]=(i<16)?w[i]:(w[i-16]+(rr(w15,7)^rr(w15,18)^(w15>>>3))+w[i-7]+(rr(w2,17)^rr(w2,19)^(w2>>>10)))|0);
+      const t2=(rr(a,2)^rr(a,13)^rr(a,22))+((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+      hash=[(t1+t2)|0].concat(hash); hash[4]=(hash[4]+t1)|0;
+    }
+    for(let i=0;i<8;i++) hash[i]=(hash[i]+old[i])|0;
+  }
+  return hash.slice(0,8).map(x=>(x>>>0).toString(16).padStart(8,'0')).join('');
+}
+const ICON = {
+  pc:'<svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>',
+  hp:'<svg class="i" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/></svg>'
+};
+const TICK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
 
-/* ---------- state ---------- */
-let peer=null, conn=null, dc=null, myCode=null, peerLabel='';
-const waiters = new Map();
-const sendQueue = []; let sending=false;
-let incoming=null;          // batch yang sedang diterima
-let dirHandle=null;         // folder simpan pilihan pengguna
+/* ---------- identitas (kode semi-permanen + nama wajib) ---------- */
+const myKind = NATIVE ? 'pc' : guessKind();
+let myCode = cleanCode(store.get('klm-code'));
+if(myCode.length!==6){ myCode = genCode(); store.set('klm-code', myCode); }
+let myName = (store.get('klm-name')||'').trim().slice(0,32);
+
+/* ---------- keadaan ---------- */
+const links = new Map();      // kode -> perangkat terhubung
+const selected = new Set();   // kode perangkat tujuan kirim
 const batches = new Map();
-let wakeLock=null;
+const hubTids = new Map();
+let peer=null, peerReady=false, peerStarting=false;
+let hubOn=false, hubSeen=false, es=null, hubDownTimer=0;
+let pendingTo = cleanCode(new URLSearchParams(location.search).get('to'));
+if(pendingTo.length!==6 || pendingTo===myCode) pendingTo='';
+let wakeLock=null, dirHandle=null, showDirFn=null;
+let autoAccept = store.get('klm-auto')==='1';
 
-$('devName').value = store.get('klm-name') || guessDevice();
-$('devName').addEventListener('change', e => { const v=e.target.value.trim()||guessDevice(); e.target.value=v; store.set('klm-name',v); sendMsg({t:'hello',name:v}); });
-const myName = () => $('devName').value.trim() || guessDevice();
-
-/* ---------- kemampuan browser ---------- */
+/* ---------- kemampuan browser & penyimpanan ---------- */
 const canDir = !NATIVE && 'showDirectoryPicker' in window;
 const canSave = !NATIVE && 'showSaveFilePicker' in window;
-let autoAccept = store.get('klm-auto')==='1';
 $('autoAccept').checked = autoAccept;
 $('autoAccept').onchange = e => { autoAccept=e.target.checked; store.set('klm-auto', autoAccept?'1':'0'); };
-if(canDir){ $('pickSave').hidden=false; }
 if(NATIVE){
   $('pickSave').hidden=false; $('openSave').hidden=false; $('pickSave').textContent='Ganti folder';
   $('capNote').textContent='File ditulis langsung ke disk, jadi ukuran berapa pun aman diterima.';
-  const showDir = d => { $('saveInfo').innerHTML='Disimpan ke <b>'+esc(d)+'</b>'; };
-  $('pickSave').onclick = async () => { showDir(await NATIVE.chooseDir()); };
+  showDirFn = d => { $('saveInfo').innerHTML='Disimpan ke <b>'+esc(d)+'</b>'; };
+  $('pickSave').onclick = async () => { showDirFn(await NATIVE.chooseDir()); };
   $('openSave').onclick = () => NATIVE.openDir();
-  showDirFn = showDir;
-} else $('capNote').textContent = canSave
-  ? 'Browser ini bisa menulis file langsung ke disk, jadi file sebesar apa pun aman diterima.'
-  : 'Di browser ini file diterima ditampung di memori sampai selesai. Untuk file sangat besar (beberapa GB), terima di PC dengan Chrome atau Edge.';
-if(!NATIVE) $('pickSave').onclick = async () => {
-  try{ dirHandle = await window.showDirectoryPicker({mode:'readwrite'}); $('saveInfo').innerHTML='Disimpan ke folder <b>'+esc(dirHandle.name)+'</b>'; $('pickSave').textContent='Ganti folder'; }
-  catch(e){}
-};
-
-/* ---------- peer ---------- */
-function showCode(code){
-  const a=code.slice(0,3), b=code.slice(3);
-  $('myCode').innerHTML = '<span>'+a+'</span><span>-</span><span>'+b+'</span>';
+  if(NINFO) showDirFn(NINFO.saveDir);
+} else {
+  if(canDir){
+    $('pickSave').hidden=false;
+    $('pickSave').onclick = async () => {
+      try{ dirHandle = await window.showDirectoryPicker({mode:'readwrite'}); $('saveInfo').innerHTML='Disimpan ke folder <b>'+esc(dirHandle.name)+'</b>'; $('pickSave').textContent='Ganti folder'; }catch(e){}
+    };
+  }
+  $('capNote').textContent = 'Lewat Wi-Fi PC, file masuk ke folder Unduhan tanpa batas ukuran. ' + (canSave
+    ? 'Lewat internet, browser ini juga bisa menulis langsung ke disk.'
+    : 'Lewat internet, file ditampung di memori dulu; untuk file beberapa GB pakai PC.');
 }
+
+/* ---------- tampilan kode & QR ---------- */
+function showCode(){ $('myCode').innerHTML = '<span>'+myCode.slice(0,3)+'</span><span>-</span><span>'+myCode.slice(3)+'</span>'; }
 function lanBase(){ return (NINFO && NINFO.lan && NINFO.lan.length) ? 'http://'+NINFO.lan[0].address+':'+NINFO.port+'/' : null; }
 function shareLink(){
   if(NATIVE){ const b=lanBase(); return (b || location.origin+'/') + '?to=' + myCode; }
@@ -393,421 +487,629 @@ function renderQR(){
     const q = qrcode(0,'M'); q.addData(shareLink()); q.make();
     const el=$('qr'); el.classList.remove('empty'); el.innerHTML = q.createSvgTag({cellSize:4, margin:0, scalable:true});
   }catch(e){}
+  const h=$('lanHint');
   if(NATIVE){
-    const b=lanBase(), h=$('lanHint'); h.hidden=false;
+    const b=lanBase(); h.hidden=false;
     h.innerHTML = b
-      ? 'Pindai QR dengan kamera HP yang tersambung ke <b>WiFi yang sama</b>, atau buka <b style="user-select:all;font-family:var(--f-mono)">'+esc(shareLink())+'</b> di browser HP. HP di jaringan lain: buka KLM Sender versi web lalu masukkan kode.'
-      : 'PC ini belum tersambung ke jaringan lokal. HP bisa membuka KLM Sender versi web lalu memasukkan kode di atas.';
-  }
+      ? 'Perangkat di <b>Wi-Fi yang sama</b> cukup memindai QR ini, <b>bisa tanpa internet</b>. Atau buka <b style="user-select:all;font-family:var(--f-mono)">'+esc(shareLink())+'</b> di browser. Perangkat di jaringan lain: masukkan kode di atas.'
+      : 'PC ini belum tersambung ke Wi-Fi atau LAN. Sambungkan dulu agar HP bisa memindai QR. Perangkat lain tetap bisa memakai kode lewat internet.';
+  } else if(hubSeen){
+    h.hidden=false; h.innerHTML='Tersambung ke <b>server Wi-Fi PC</b>. Kirim antar perangkat di Wi-Fi ini tidak butuh internet.';
+  } else h.hidden=true;
 }
-function startPeer(code){
-  if(peer){ try{peer.destroy()}catch(e){} }
-  myCode=code; showCode(code); setStatus('busy','Menyiapkan…');
-  if(typeof Peer==='undefined'){ setStatus('bad','Tidak ada internet'); toast('Butuh internet untuk menghubungkan perangkat. Mencoba lagi…'); setTimeout(()=>location.reload(), 8000); return; }
-  peer = new Peer(PREFIX+code, {debug:0});
-  peer.on('open', () => { store.set('klm-code',code); setStatus(conn&&conn.open?'linked':'ready', conn&&conn.open?'Terhubung':'Siap'); renderQR(); autoConnect(); });
-  peer.on('connection', c => setupConn(c));
-  peer.on('disconnected', () => { setStatus('busy','Menyambung ulang…'); setTimeout(()=>{ try{ if(peer && !peer.destroyed) peer.reconnect(); }catch(e){} },1500); });
-  peer.on('error', err => {
-    const t=err.type;
-    if(t==='unavailable-id'){ startPeer(genCode()); return; }
-    if(t==='peer-unavailable'){ toast('Perangkat tidak ditemukan. Cek kode dan pastikan KLM Sender terbuka di sana.'); resetConnectBtn(); return; }
-    if(t==='network' || t==='server-error' || t==='socket-error' || t==='socket-closed'){ setStatus('bad','Offline'); return; }
-    if(t==='browser-incompatible'){ setStatus('bad','Tidak didukung'); toast('Browser ini tidak mendukung transfer langsung.'); return; }
+if(NATIVE){
+  setInterval(async () => {
+    try{ const i=await NATIVE.info(); const a=JSON.stringify(i.lan), b=JSON.stringify(NINFO&&NINFO.lan); NINFO=Object.assign(NINFO||{}, i); if(a!==b) renderQR(); }catch(e){}
+  }, 20000);
+}
+
+/* ---------- nama perangkat (wajib) ---------- */
+function askName(){
+  return new Promise(res => {
+    $('nameModal').hidden=false; $('nameInput').value=myName||''; setTimeout(()=>$('nameInput').focus(),50);
+    $('nameForm').onsubmit = e => {
+      e.preventDefault();
+      const v=$('nameInput').value.trim().replace(/\s+/g,' ');
+      if(v.length<2){ $('nameErr').hidden=false; $('nameErr').textContent='Isi nama minimal 2 huruf.'; return; }
+      setName(v); $('nameModal').hidden=true; res();
+    };
   });
 }
-let autoTried=false;
-function autoConnect(){
-  if(autoTried) return; autoTried=true;
-  const to = cleanCode(new URLSearchParams(location.search).get('to'));
-  if(to && to.length===6 && to!==myCode){ $('peerCode').value=to.slice(0,3)+'-'+to.slice(3); connectTo(to); }
+function setName(v){
+  myName=v.slice(0,32); store.set('klm-name', myName); $('devName').value=myName;
+  links.forEach(l => { if(l.via==='p2p') lsend(l,{t:'hello',name:myName,kind:myKind}); });
+  if(hubOn) hubPost('/api/name',{from:myCode,name:myName});
 }
-function connectTo(code){
-  if(!peer || peer.disconnected){ toast('Belum online. Tunggu sebentar.'); return; }
-  if(code===myCode){ toast('Itu kode perangkat ini sendiri.'); return; }
-  $('connectBtn').disabled=true; $('connectBtn').textContent='Menghubungkan…';
-  const c = peer.connect(PREFIX+code, {reliable:true, serialization:'raw', metadata:{name:myName()}});
-  setupConn(c);
-  setTimeout(()=>{ if(c && !c.open && conn===c){ toast('Belum tersambung. Coba lagi atau periksa jaringan kedua perangkat.'); resetConnectBtn(); try{c.close()}catch(e){} } }, 20000);
-}
-function resetConnectBtn(){ $('connectBtn').disabled=false; $('connectBtn').textContent='Hubungkan'; }
+$('devName').addEventListener('change', e => {
+  const v=e.target.value.trim().replace(/\s+/g,' ');
+  if(v.length<2){ e.target.value=myName; toast('Nama perangkat wajib diisi, minimal 2 huruf.'); return; }
+  setName(v); toast('Nama disimpan.');
+});
 
-function setupConn(c){
-  if(conn && conn!==c){ const old=conn; conn=null; try{old.close()}catch(e){} }
-  conn=c;
-  const onOpen = () => {
-    if(conn!==c) return;
-    dc = c.dataChannel; dc.binaryType='arraybuffer'; dc.bufferedAmountLowThreshold = LOW;
-    peerLabel = (c.metadata && c.metadata.name) || 'Perangkat';
-    peerCodeNow = String(c.peer||'').replace(PREFIX,'');
-    rememberPeer(peerCodeNow, peerLabel);
-    showPeer(true);
-    sendMsg({t:'hello', name:myName()});
-    runQueue();
+/* ---------- password untuk ganti kode ---------- */
+function pwdGet(){ const v=store.get('klm-pwd')||''; const i=v.indexOf(':'); return i>0 ? {salt:v.slice(0,i), hash:v.slice(i+1)} : null; }
+function pwdCheck(p){ const r=pwdGet(); return !!r && sha256(r.salt+'|'+p)===r.hash; }
+function pwdSet(p){ const salt=uid()+uid(); store.set('klm-pwd', salt+':'+sha256(salt+'|'+p)); }
+function renderPwdInfo(){
+  const has=!!pwdGet();
+  $('pwdInfo').innerHTML = has ? '<b>Kode terkunci.</b> Kode dan QR hanya bisa diganti dengan password.' : '<b>Kode tetap</b> (tidak berubah walau aplikasi ditutup). Atur password untuk menguncinya.';
+  $('pwdBtn').textContent = has ? 'Ubah password' : 'Atur password';
+}
+let pwFails=0, pwLockUntil=0;
+function openPw(mode, onOk){
+  const has=!!pwdGet();
+  const needOld = has, needNew = (mode==='change') || !has;
+  $('pwOldF').hidden=!needOld; $('pwNewF').hidden=!needNew; $('pwNew2F').hidden=!needNew;
+  ['pwOld','pwNew','pwNew2'].forEach(id=>$(id).value='');
+  $('pwErr').hidden=true;
+  if(mode==='regen'){
+    $('pwTitle').textContent = has ? 'Ganti kode perangkat' : 'Buat password dulu';
+    $('pwText').textContent = (has ? 'Masukkan password untuk membuat kode dan QR baru.' : 'Kode perangkat dikunci dengan password. Buat password sekarang; password ini diminta setiap kali ingin mengganti kode.') + ' Perangkat lain perlu memindai QR baru setelah kode diganti.';
+    $('pwOk').textContent = 'Ganti kode';
+  } else {
+    $('pwTitle').textContent = has ? 'Ubah password' : 'Atur password';
+    $('pwText').textContent = 'Password ini hanya tersimpan di perangkat ini dan dipakai untuk mengganti kode.';
+    $('pwOk').textContent = 'Simpan';
+  }
+  $('pwModal').hidden=false;
+  setTimeout(()=>{ (needOld?$('pwOld'):$('pwNew')).focus(); },50);
+  $('pwForm').onsubmit = e => {
+    e.preventDefault();
+    const err = t => { $('pwErr').hidden=false; $('pwErr').textContent=t; };
+    if(needOld){
+      if(Date.now()<pwLockUntil) return err('Terlalu banyak percobaan. Coba lagi dalam '+Math.ceil((pwLockUntil-Date.now())/1000)+' detik.');
+      if(!pwdCheck($('pwOld').value)){ pwFails++; if(pwFails>=5){ pwFails=0; pwLockUntil=Date.now()+30000; } return err('Password salah.'); }
+      pwFails=0;
+    }
+    if(needNew){
+      const a=$('pwNew').value, b=$('pwNew2').value;
+      if(a.length<4) return err('Password minimal 4 karakter.');
+      if(a!==b) return err('Kedua password tidak sama.');
+      pwdSet(a);
+    }
+    $('pwModal').hidden=true; renderPwdInfo();
+    if(onOk) onOk(); else toast('Password disimpan.');
   };
-  if(c.open) onOpen(); else c.on('open', onOpen);
-  c.on('data', d => { if(conn===c) onData(d); });
-  c.on('close', () => onClose(c));
-  c.on('error', () => onClose(c));
 }
-function onClose(c){
-  if(conn!==c) return;
-  conn=null; dc=null; showPeer(false); resetConnectBtn();
-  for(const [k,fn] of waiters){ fn('closed'); } waiters.clear();
-  if(incoming && incoming.status!=='done'){ failIncoming('Koneksi terputus'); }
-  toast('Koneksi terputus.');
+$('pwCancel').onclick = () => { $('pwModal').hidden=true; };
+$('pwdBtn').onclick = () => openPw('change');
+$('newCode').onclick = () => openPw('regen', regenCode);
+function regenCode(){
+  links.forEach(l => { if(l.via==='p2p'){ const c=l.conn; removeLink(l,true); try{c.close()}catch(e){} } });
+  myCode = genCode(); store.set('klm-code', myCode);
+  showCode(); renderQR();
+  if(typeof Peer!=='undefined') startPeer();
+  if(hubSeen) openEvents();
+  toast('Kode baru: '+fmtCode(myCode));
 }
-function showPeer(on){
-  $('connectBox').hidden=on; $('peerBox').hidden=!on;
-  $('drop').classList.toggle('off', !on);
-  $('dropHint').textContent = on ? 'Seret file ke sini, atau pilih. Bisa banyak file sekaligus, ukuran berapa pun.' : 'Hubungkan ke perangkat tujuan dulu.';
-  if(on){ $('peerName').textContent=peerLabel; setStatus('linked','Terhubung'); detectRoute(); }
-  else setStatus(peer && peer.open ? 'ready':'busy', peer && peer.open ? 'Siap':'Menyiapkan…');
-}
-async function detectRoute(){
-  $('peerInfo').textContent='Terhubung langsung';
-  try{
-    const pc = conn && conn.peerConnection; if(!pc) return;
-    await new Promise(r=>setTimeout(r,1200));
-    const st = await pc.getStats(); let pair=null, cands={};
-    st.forEach(r=>{ if(r.type==='candidate-pair' && (r.nominated||r.selected) && r.state==='succeeded') pair=r; if(r.type==='local-candidate'||r.type==='remote-candidate') cands[r.id]=r; });
-    if(!pair) return;
-    const l=cands[pair.localCandidateId], r=cands[pair.remoteCandidateId];
-    const types=[l&&l.candidateType, r&&r.candidateType];
-    if(types.includes('relay')) $('peerInfo').textContent='Lewat relay (jarak jauh / jaringan ketat)';
-    else if(types.every(t=>t==='host')) $('peerInfo').textContent='Jaringan lokal yang sama · tercepat';
-    else $('peerInfo').textContent='Langsung lewat internet';
-  }catch(e){}
-}
-$('connectForm').addEventListener('submit', e => { e.preventDefault(); const c=cleanCode($('peerCode').value); if(c.length!==6){ toast('Kode terdiri dari 6 karakter.'); return; } connectTo(c); });
-$('peerCode').addEventListener('input', e => { const c=cleanCode(e.target.value); e.target.value = c.length>3 ? c.slice(0,3)+'-'+c.slice(3) : c; });
-$('disconnectBtn').onclick = () => { if(conn){ const c=conn; onClose(c); try{c.close()}catch(e){} } };
-$('copyLink').onclick = () => myCode && copy(shareLink(), 'Link disalin. Buka di perangkat lain.');
-$('copyCode').onclick = () => myCode && copy(myCode.slice(0,3)+'-'+myCode.slice(3), 'Kode disalin.');
-$('newCode').onclick = () => { if(conn){ toast('Putuskan koneksi dulu.'); return; } startPeer(genCode()); };
 
-function sendMsg(o){ if(dc && dc.readyState==='open'){ try{ dc.send(JSON.stringify(o)); }catch(e){} } }
-function wait(key){ return new Promise(r => waiters.set(key, r)); }
-function resolve(key, v){ const f=waiters.get(key); if(f){ waiters.delete(key); f(v); } }
-function drain(){ return new Promise(r => { if(!dc || dc.bufferedAmount<=LOW) return r(); const h=()=>{ dc && dc.removeEventListener('bufferedamountlow',h); clearInterval(iv); r(); }; const iv=setInterval(()=>{ if(!dc||dc.readyState!=='open'||dc.bufferedAmount<=LOW) h(); },200); dc.addEventListener('bufferedamountlow',h); }); }
+/* ---------- perangkat terhubung ---------- */
+function makeLink(code, via, name, kind){
+  const l = { code, via, name:name||'Perangkat', kind:kind==='hp'?'hp':'pc', route: via==='hub'?'Wi-Fi lokal · tanpa internet':'Internet',
+              queue:[], sending:false, cur:null, incoming:null, waiters:new Map(), conn:null, dc:null, greeted:false };
+  links.set(code, l); return l;
+}
+const isIdle = l => !l.sending && !l.queue.length && !(l.incoming && ['offer','run'].includes(l.incoming.status));
+function onNewLink(l, mine){
+  if(mine || (!selected.size && links.size===1)) selected.add(l.code);
+  if(pendingTo===l.code){ selected.add(l.code); pendingTo=''; }
+  renderDevices(); updateStatus();
+}
+function removeLink(l, quiet){
+  if(links.get(l.code)!==l) return;
+  links.delete(l.code); selected.delete(l.code);
+  for(const f of l.waiters.values()) f('closed'); l.waiters.clear();
+  l.queue.forEach(b => { b.status='failed'; b.reason='Koneksi terputus'; render(b); }); l.queue=[];
+  if(l.cur){ l.cur.lost=true; if(l.cur.xhr) l.cur.xhr.abort(); }
+  if(l.incoming && ['offer','run'].includes(l.incoming.status)) failIncoming(l,'Koneksi terputus');
+  if(!quiet) toast(l.name+' terputus.');
+  renderDevices(); updateStatus();
+}
+function lsend(l, obj){
+  if(l.via==='p2p'){ if(l.dc && l.dc.readyState==='open'){ try{ l.dc.send(JSON.stringify(obj)); }catch(e){} } }
+  else hubPost('/api/msg', {from:myCode, to:l.code, msg:obj});
+}
+function wait(l,key){ return new Promise(r => l.waiters.set(key, r)); }
+function resolve(l,key,v){ const f=l.waiters.get(key); if(f){ l.waiters.delete(key); f(v); } }
 
-/* ---------- perangkat terakhir (untuk PC⇄PC, HP⇄HP, PC⇄HP) ---------- */
-let peerCodeNow='';
+function renderDevices(){
+  const list=[...links.values()].sort((a,b)=>(a.via===b.via?0:a.via==='hub'?-1:1) || a.name.localeCompare(b.name));
+  $('devCount').textContent = list.length;
+  $('selBar').hidden = list.length<2;
+  const el=$('devList');
+  if(!list.length){
+    el.innerHTML = '<div class="devs-empty">'+(NATIVE
+      ? 'Belum ada perangkat. Pindai QR di atas dengan HP atau masukkan kode perangkat lain.'
+      : 'Belum ada perangkat. Pindai QR perangkat lain atau masukkan kodenya di bawah.')+'</div>';
+  } else {
+    el.innerHTML = list.map(l => '<div class="dev'+(selected.has(l.code)?' sel':'')+'" data-code="'+l.code+'" role="checkbox" tabindex="0" aria-checked="'+selected.has(l.code)+'">'+
+      '<span class="tick">'+TICK+'</span>'+
+      '<div class="dev-ic">'+ICON[l.kind]+'</div>'+
+      '<div class="dev-who"><b>'+esc(l.name)+'</b><small>'+fmtCode(l.code)+' · '+esc(l.route)+'</small></div>'+
+      (l.via==='p2p' ? '<button class="small ghost" data-x="'+l.code+'">Putuskan</button>' : '')+
+      '</div>').join('');
+    el.querySelectorAll('.dev').forEach(d => {
+      const t = () => { const c=d.dataset.code; selected.has(c)?selected.delete(c):selected.add(c); renderDevices(); };
+      d.onclick = e => { if(!e.target.closest('[data-x]')) t(); };
+      d.onkeydown = e => { if(e.key===' '||e.key==='Enter'){ e.preventDefault(); t(); } };
+    });
+    el.querySelectorAll('[data-x]').forEach(b => b.onclick = () => { const l=links.get(b.dataset.x); if(l){ const c=l.conn; removeLink(l,true); try{c.close()}catch(e){} toast('Diputuskan.'); } });
+  }
+  for(const c of [...selected]) if(!links.has(c)) selected.delete(c);
+  updateDrop();
+}
+$('selAll').onclick = () => { links.forEach((_,c)=>selected.add(c)); renderDevices(); };
+$('selNone').onclick = () => { selected.clear(); renderDevices(); };
+function updateDrop(){
+  const t=[...selected].map(c=>links.get(c)).filter(Boolean);
+  $('drop').classList.toggle('off', !t.length);
+  $('dropHint').innerHTML = t.length
+    ? 'Kirim ke <b>'+t.map(l=>esc(l.name)).join(', ')+'</b>. Seret file ke sini atau pilih; ukuran berapa pun.'
+    : (links.size ? 'Pilih perangkat tujuan di daftar atas.' : 'Hubungkan perangkat dulu.');
+}
+function updateStatus(){
+  const n=links.size;
+  if(n) return setStatus('linked', n+' perangkat');
+  if(hubOn && peerReady) return setStatus('ready','Siap · Wi-Fi + Internet');
+  if(hubOn) return setStatus('ready','Siap · Wi-Fi (offline)');
+  if(peerReady) return setStatus('ready','Siap · Internet');
+  if(peerStarting) return setStatus('busy','Menyiapkan…');
+  setStatus('bad', NATIVE ? 'Offline · hanya Wi-Fi' : 'Tidak ada koneksi');
+}
+
+/* ---------- perangkat terakhir ---------- */
 function loadRecent(){ try{ return JSON.parse(store.get('klm-recent')||'[]').filter(x=>x && /^[A-Z0-9]{6}$/.test(x.code)); }catch(e){ return []; } }
 function rememberPeer(code, name){
   if(!/^[A-Z0-9]{6}$/.test(code||'')) return;
   const list = loadRecent().filter(x=>x.code!==code);
   list.unshift({code, name:String(name||'Perangkat').slice(0,40)});
-  store.set('klm-recent', JSON.stringify(list.slice(0,6))); renderRecent();
+  store.set('klm-recent', JSON.stringify(list.slice(0,8))); renderRecent();
 }
 function renderRecent(){
-  const list=loadRecent(), box=$('recentBox'), el=$('recentList');
-  box.hidden = !list.length;
-  el.innerHTML = list.map(x=>'<button class="small chip" data-code="'+x.code+'">'+esc(x.name)+' <b>'+x.code.slice(0,3)+'-'+x.code.slice(3)+'</b></button>').join('');
-  el.querySelectorAll('[data-code]').forEach(b=>b.onclick=()=>{ const c=b.dataset.code; $('peerCode').value=c.slice(0,3)+'-'+c.slice(3); connectTo(c); });
+  const list=loadRecent(), el=$('recentList');
+  $('recentBox').hidden = !list.length;
+  el.innerHTML = list.map(x=>'<button class="small chip" data-code="'+x.code+'">'+esc(x.name)+' <b>'+fmtCode(x.code)+'</b></button>').join('');
+  el.querySelectorAll('[data-code]').forEach(b=>b.onclick=()=>connectTo(b.dataset.code));
 }
-renderRecent();
 
-/* ---------- pindai QR dengan kamera (HP Android & browser yang mendukung) ---------- */
-let scanStream=null, scanTimer=0;
-(async () => {
-  try{
-    if(!('BarcodeDetector' in window) || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
-    const f = await BarcodeDetector.getSupportedFormats();
-    if(f.includes('qr_code')) $('scanBtn').hidden=false;
-  }catch(e){}
-})();
-function codeFromText(t){
-  t=String(t||'').trim();
-  try{ const u=new URL(t); const c=cleanCode(u.searchParams.get('to')); if(c.length===6) return c; }catch(e){}
-  const c=cleanCode(t); return c.length===6 ? c : null;
+/* ---------- server Wi-Fi PC (hub lokal, bisa tanpa internet) ---------- */
+async function hubPost(p, obj){
+  try{ const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)}); return r.ok; }catch(e){ return false; }
 }
-async function openScanner(){
-  const det = new BarcodeDetector({formats:['qr_code']});
-  try{ scanStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false}); }
-  catch(e){ toast('Kamera tidak bisa dibuka. Izinkan akses kamera atau ketik kodenya.'); return; }
-  const v=$('scanVideo'); v.srcObject=scanStream; $('scanner').hidden=false; $('scanMsg').textContent='Arahkan kamera ke QR di perangkat lain';
-  try{ await v.play(); }catch(e){}
-  const tick = async () => {
-    if(!scanStream) return;
-    try{
-      const r = await det.detect(v);
-      for(const x of r){ const c=codeFromText(x.rawValue); if(c){ closeScanner(); $('peerCode').value=c.slice(0,3)+'-'+c.slice(3); connectTo(c); return; } }
-      if(r.length) $('scanMsg').textContent='QR ini bukan kode KLM Sender';
-    }catch(e){}
-    scanTimer = setTimeout(tick, 250);
+async function startHub(){
+  try{ const r=await fetch('/api/hub',{cache:'no-store'}); if(!r.ok) return; const j=await r.json(); if(!j || j.app!=='klm-sender') return; }catch(e){ return; }
+  hubSeen=true; renderQR(); openEvents();
+}
+function openEvents(){
+  if(es){ try{es.close()}catch(e){} }
+  const src = new EventSource('/api/events?id='+myCode+'&name='+encodeURIComponent(myName)+'&kind='+myKind+(NATIVE?'&host=1':''));
+  es = src;
+  src.onopen = () => { if(es!==src) return; hubOn=true; clearTimeout(hubDownTimer); updateStatus(); };
+  src.onerror = () => {
+    if(es!==src) return;
+    hubOn=false; updateStatus();
+    clearTimeout(hubDownTimer);
+    hubDownTimer = setTimeout(() => { if(!hubOn){ links.forEach(l=>{ if(l.via==='hub') removeLink(l,true); }); } }, 6000);
+    if(src.readyState===2) setTimeout(() => { if(es===src) openEvents(); }, 3000);
   };
-  tick();
+  src.onmessage = e => { if(es!==src) return; let m; try{ m=JSON.parse(e.data) }catch(_){ return; } onHub(m); };
 }
-function closeScanner(){
-  clearTimeout(scanTimer);
-  if(scanStream){ scanStream.getTracks().forEach(t=>t.stop()); scanStream=null; }
-  $('scanVideo').srcObject=null; $('scanner').hidden=true;
+function onHub(m){
+  if(m.type==='peers'){
+    const seen=new Set();
+    for(const p of m.list||[]){
+      if(p.code===myCode) continue;
+      seen.add(p.code);
+      let l=links.get(p.code);
+      if(!l){ l=makeLink(p.code,'hub',p.name,p.kind); if(p.host) l.route='PC server · Wi-Fi lokal'; onNewLink(l,false); toast(l.name+' terhubung lewat Wi-Fi.'); }
+      else if(l.via==='hub'){ l.name=p.name; l.kind=p.kind==='hp'?'hp':'pc'; }
+      else if(isIdle(l)){ // pindah ke Wi-Fi lokal yang lebih cepat
+        const c=l.conn, wasSel=selected.has(l.code); removeLink(l,true); try{c.close()}catch(e){}
+        const n=makeLink(p.code,'hub',p.name,p.kind); if(p.host) n.route='PC server · Wi-Fi lokal'; if(wasSel) selected.add(n.code); onNewLink(n,false);
+      }
+    }
+    links.forEach(l => { if(l.via==='hub' && !seen.has(l.code)) removeLink(l); });
+    renderDevices(); updateStatus();
+  } else if(m.type==='msg'){
+    const l=links.get(m.from); if(l && l.via==='hub') onControl(l, m.msg||{});
+  } else if(m.type==='xfer'){
+    onXfer(m);
+  }
 }
-$('scanBtn').onclick = openScanner;
-$('scanClose').onclick = closeScanner;
 
-/* ---------- wake lock & tutup tab ---------- */
-async function keepAwake(on){
+/* ---------- internet (peer-to-peer) ---------- */
+let peerLibTry=0;
+async function ensurePeer(){
+  if(typeof Peer==='undefined'){
+    for(const u of window.KLM_PEER_URLS.slice(1)){ if(typeof Peer!=='undefined') break; await window.klmLoadScript(u); }
+  }
+  if(typeof Peer==='undefined'){ updateStatus(); setTimeout(ensurePeer, Math.min(60000, 10000*(++peerLibTry))); return; }
+  startPeer();
+}
+function startPeer(){
+  if(peer){ const old=peer; peer=null; try{ old.destroy() }catch(e){} }
+  peerReady=false; peerStarting=true; updateStatus();
+  let p;
+  try{ p = new Peer(PREFIX+myCode, {debug:0}); }catch(e){ peerStarting=false; updateStatus(); return; }
+  peer = p;
+  p.on('open', () => {
+    if(peer!==p) return;
+    peerReady=true; peerStarting=false; updateStatus();
+    if(pendingTo && !links.has(pendingTo)){ setTimeout(() => { if(pendingTo && !links.has(pendingTo)){ const c=pendingTo; pendingTo=''; connectTo(c); } }, hubSeen?1500:0); }
+  });
+  p.on('connection', c => setupConn(c,false));
+  p.on('disconnected', () => { if(peer!==p) return; peerReady=false; updateStatus(); setTimeout(() => { try{ if(peer===p && !p.destroyed) p.reconnect(); }catch(e){} }, 3000); });
+  p.on('error', err => {
+    if(peer!==p) return;
+    const t=err.type;
+    if(t==='peer-unavailable'){ const c=(String(err.message||'').match(/klmsender-v1-([A-Z0-9]{6})/)||[])[1]; toast('Perangkat '+fmtCode(c||'')+' tidak ditemukan. Pastikan KLM Sender terbuka di sana.'); resetConnectBtn(); return; }
+    if(t==='unavailable-id'){ peerStarting=true; updateStatus(); setTimeout(() => { if(peer===p) startPeer(); }, 5000); return; }
+    if(t==='browser-incompatible'){ peerStarting=false; updateStatus(); return; }
+    if(['network','server-error','socket-error','socket-closed'].includes(t)){ peerReady=false; peerStarting=false; updateStatus(); setTimeout(() => { if(peer===p) startPeer(); }, 10000); }
+  });
+}
+function connectTo(code){
+  code=cleanCode(code);
+  if(code.length!==6) return toast('Kode terdiri dari 6 karakter.');
+  if(code===myCode) return toast('Itu kode perangkat ini sendiri.');
+  const ex=links.get(code);
+  if(ex){ selected.add(code); renderDevices(); return toast(ex.name+' sudah terhubung.'); }
+  if(!peer || !peerReady){ pendingTo=code; return toast(hubOn ? 'Perangkat itu tidak ada di Wi-Fi ini, dan internet belum tersedia.' : 'Belum online. Akan dihubungkan begitu ada internet.'); }
+  $('connectBtn').disabled=true; $('connectBtn').textContent='Menghubungkan…';
+  const c = peer.connect(PREFIX+code, {reliable:true, serialization:'raw', metadata:{name:myName, kind:myKind}});
+  setupConn(c, true);
+  setTimeout(() => { if(!c.open && !links.has(code)){ toast('Belum tersambung. Coba lagi atau periksa jaringan kedua perangkat.'); resetConnectBtn(); try{c.close()}catch(e){} } }, 20000);
+}
+function resetConnectBtn(){ $('connectBtn').disabled=false; $('connectBtn').textContent='Hubungkan'; }
+function setupConn(c, mine){
+  const code=String(c.peer||'').replace(PREFIX,'');
+  if(!/^[A-Z0-9]{6}$/.test(code)){ try{c.close()}catch(e){} return; }
+  const onOpen = () => {
+    const ex=links.get(code);
+    if(ex && ex.via==='hub'){ try{c.close()}catch(e){} return; }
+    if(ex && ex.conn!==c){ const old=ex.conn; removeLink(ex,true); try{old.close()}catch(e){} }
+    const md=c.metadata||{};
+    const l=makeLink(code,'p2p', mine?'Perangkat':String(md.name||'Perangkat').slice(0,40), mine?'pc':md.kind);
+    l.conn=c; l.dc=c.dataChannel; l.dc.binaryType='arraybuffer'; l.dc.bufferedAmountLowThreshold=LOW;
+    lsend(l,{t:'hello', name:myName, kind:myKind});
+    if(mine){ resetConnectBtn(); $('peerCode').value=''; }
+    else { l.greeted=true; toast(l.name+' terhubung.'); rememberPeer(code,l.name); }
+    onNewLink(l, mine); detectRoute(l);
+  };
+  if(c.open) onOpen(); else c.on('open', onOpen);
+  c.on('data', d => { const l=links.get(code); if(l && l.conn===c){ if(typeof d==='string'){ let m; try{ m=JSON.parse(d) }catch(e){ return; } onControl(l,m); } else onChunk(l,d); } });
+  const gone = () => { const l=links.get(code); if(l && l.conn===c) removeLink(l); };
+  c.on('close', gone); c.on('error', gone);
+}
+async function detectRoute(l){
   try{
-    if(on && !wakeLock && 'wakeLock' in navigator){ wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release',()=>{wakeLock=null}); }
-    if(!on && wakeLock){ await wakeLock.release(); wakeLock=null; }
+    const pc=l.conn && l.conn.peerConnection; if(!pc) return;
+    await new Promise(r=>setTimeout(r,1200));
+    const st=await pc.getStats(); let pair=null; const cands={};
+    st.forEach(r=>{ if(r.type==='candidate-pair' && (r.nominated||r.selected) && r.state==='succeeded') pair=r; if(r.type==='local-candidate'||r.type==='remote-candidate') cands[r.id]=r; });
+    if(!pair) return;
+    const types=[cands[pair.localCandidateId], cands[pair.remoteCandidateId]].map(x=>x&&x.candidateType);
+    l.route = types.includes('relay') ? 'Lewat relay (jaringan ketat)' : types.every(t=>t==='host') ? 'Jaringan lokal · tercepat' : 'Langsung lewat internet';
+    renderDevices();
   }catch(e){}
 }
-const busy = () => sending || (incoming && incoming.status==='run');
-document.addEventListener('visibilitychange', () => { if(document.visibilityState==='visible' && busy()) keepAwake(true); });
-window.addEventListener('beforeunload', e => { if(busy()){ e.preventDefault(); e.returnValue=''; } });
+$('connectForm').addEventListener('submit', e => { e.preventDefault(); connectTo($('peerCode').value); });
+$('peerCode').addEventListener('input', e => { const c=cleanCode(e.target.value); e.target.value = c.length>3 ? c.slice(0,3)+'-'+c.slice(3) : c; });
+$('copyLink').onclick = () => copy(shareLink(), 'Link disalin. Buka di perangkat lain.');
+$('copyCode').onclick = () => copy(fmtCode(myCode), 'Kode disalin.');
+
+/* ---------- pesan kontrol (sama untuk Wi-Fi lokal & internet) ---------- */
+function onControl(l, m){
+  switch(m.t){
+    case 'hello':
+      l.name=String(m.name||l.name).slice(0,40); l.kind=m.kind==='hp'?'hp':'pc';
+      if(l.via==='p2p'){ rememberPeer(l.code,l.name); if(!l.greeted){ l.greeted=true; toast(l.name+' terhubung.'); } }
+      renderDevices(); batches.forEach(b=>{ if(b.link===l) render(b); });
+      break;
+    case 'offer': onOffer(l,m); break;
+    case 'accept': resolve(l,'ans:'+m.id,'accept'); break;
+    case 'reject': resolve(l,'ans:'+m.id,'reject'); break;
+    case 'ack': resolve(l,'ack:'+m.id, m.ok?'ok':'fail'); break;
+    case 'hpull': resolve(l,'pull:'+m.id+':'+m.i,'pull'); break;
+    case 'cancel': {
+      const b=batches.get('out:'+l.code+':'+m.id);
+      if(b && ['queue','wait','run'].includes(b.status)){
+        b.cancel=true; b.byPeer=true; b.status='cancelled'; b.reason='Dibatalkan penerima';
+        if(b.xhr) b.xhr.abort();
+        resolve(l,'ans:'+m.id,'reject'); resolve(l,'ack:'+m.id,'fail'); resolve(l,'pull:'+m.id+':'+b.curI,'cancel');
+        render(b);
+      }
+      if(l.incoming && l.incoming.id===m.id && ['offer','run'].includes(l.incoming.status)) abortIncoming(l,'Dibatalkan pengirim');
+      break; }
+    case 'start': if(l.incoming && l.incoming.status==='run') chain(l,()=>openSink(l,m.i)); break;
+    case 'end': if(l.incoming && l.incoming.status==='run') chain(l,()=>closeSink(l)); break;
+    case 'hfile': if(l.incoming && l.incoming.id===m.id && l.incoming.status==='run') chain(l,()=>hubFile(l,m)); break;
+    case 'batchdone': if(l.incoming && l.incoming.id===m.id && l.incoming.status==='run') chain(l,()=>finishIncoming(l)); break;
+  }
+}
 
 /* ---------- kirim ---------- */
 const relName = f => (f.webkitRelativePath || f.name);
 function queueFiles(list){
-  const files = Array.from(list).filter(f => f && f.size>=0);
+  const files = Array.from(list||[]).filter(f => f && f.size>=0);
   if(!files.length) return;
-  if(!conn || !conn.open){ toast('Hubungkan ke perangkat tujuan dulu.'); return; }
-  const b = { id:uid(), dir:'out', files, meta:files.map((f,i)=>({i,name:relName(f),size:f.size,type:f.type||''})), total:files.reduce((s,f)=>s+f.size,0), done:0, status:'queue', cancel:false };
-  batches.set(b.id,b); render(b); sendQueue.push(b); runQueue();
+  const targets=[...selected].map(c=>links.get(c)).filter(Boolean);
+  if(!targets.length){ toast(links.size ? 'Pilih perangkat tujuan dulu.' : 'Hubungkan perangkat dulu.'); return; }
+  const meta = files.map((f,i)=>({i, name:relName(f), size:f.size, type:f.type||''}));
+  const total = files.reduce((s,f)=>s+f.size,0);
+  for(const l of targets){
+    const b = { id:uid(), dir:'out', link:l, files, meta, total, done:0, status:'queue', cancel:false };
+    b.key='out:'+l.code+':'+b.id; batches.set(b.key,b); render(b);
+    l.queue.push(b); runQueue(l);
+  }
+  if(targets.length>1) toast('Dikirim ke '+targets.length+' perangkat sekaligus.');
 }
-async function runQueue(){
-  if(sending) return; sending=true;
-  while(sendQueue.length && dc && dc.readyState==='open'){
-    const b = sendQueue.shift();
-    if(b.cancel){ continue; }
-    b.status='wait'; render(b);
-    sendMsg({t:'offer', id:b.id, files:b.meta, total:b.total});
-    const ans = await wait(b.id);
-    if(ans!=='accept'){ b.status = ans==='reject'?'rejected':'failed'; render(b); continue; }
+async function runQueue(l){
+  if(l.sending) return; l.sending=true;
+  while(l.queue.length && links.get(l.code)===l){
+    const b=l.queue.shift(); if(b.cancel) continue;
+    l.cur=b; b.status='wait'; render(b);
+    lsend(l,{t:'offer', id:b.id, files:b.meta, total:b.total});
+    const ans = await wait(l,'ans:'+b.id);
+    if(ans!=='accept'){ if(b.status==='wait') b.status = ans==='reject' ? 'rejected' : 'failed'; render(b); continue; }
     b.status='run'; b.t0=performance.now(); startMeter(b); keepAwake(true); render(b);
     try{
-      for(let i=0;i<b.files.length && !b.cancel;i++){
-        sendMsg({t:'start', i});
-        await sendFile(b.files[i], b);
-        if(!b.cancel) sendMsg({t:'end', i});
-      }
-      if(b.cancel){ sendMsg({t:'cancel', id:b.id}); b.status='cancelled'; }
-      else {
-        sendMsg({t:'batchdone', id:b.id});
-        const ack = await wait(b.id+':ack');
-        b.status = ack==='ok' ? 'done' : (b.cancel?'cancelled':'failed');
-        if(b.status==='done') b.done=b.total;
-      }
-    }catch(e){ b.status='failed'; }
+      if(l.via==='p2p') await sendP2P(l,b); else await sendHub(l,b);
+    }catch(e){
+      if(b.cancel){ b.status='cancelled'; if(!b.byPeer) lsend(l,{t:'cancel', id:b.id}); }
+      else { b.status='failed'; b.reason=b.reason||'Koneksi terputus'; }
+    }
     stopMeter(b); render(b);
   }
-  sending=false; keepAwake(false);
+  l.cur=null; l.sending=false; if(!busy()) keepAwake(false);
 }
-async function sendFile(file, b){
+async function sendP2P(l,b){
+  for(let i=0;i<b.files.length && !b.cancel;i++){
+    lsend(l,{t:'start', i});
+    await sendFileP2P(l, b.files[i], b);
+    if(!b.cancel) lsend(l,{t:'end', i});
+  }
+  if(b.cancel) throw new Error('cancel');
+  lsend(l,{t:'batchdone', id:b.id});
+  const ack = await wait(l,'ack:'+b.id);
+  if(ack!=='ok') throw new Error('gagal');
+  b.status='done'; b.done=b.total;
+}
+function drain(l){
+  return new Promise(r => {
+    const dc=l.dc; if(!dc || dc.bufferedAmount<=LOW) return r();
+    const h=()=>{ dc.removeEventListener('bufferedamountlow',h); clearInterval(iv); r(); };
+    const iv=setInterval(()=>{ if(dc.readyState!=='open'||dc.bufferedAmount<=LOW) h(); },200);
+    dc.addEventListener('bufferedamountlow',h);
+  });
+}
+async function sendFileP2P(l, file, b){
   let off=0;
   while(off < file.size){
-    if(b.cancel || !dc || dc.readyState!=='open') { if(!b.cancel) throw new Error('closed'); return; }
+    if(b.cancel) return;
+    if(!l.dc || l.dc.readyState!=='open' || b.lost) throw new Error('closed');
     const buf = await file.slice(off, off+READ).arrayBuffer();
     for(let p=0; p<buf.byteLength; p+=CHUNK){
       if(b.cancel) return;
-      if(!dc || dc.readyState!=='open') throw new Error('closed');
-      if(dc.bufferedAmount > HIGH) await drain();
-      const n = Math.min(CHUNK, buf.byteLength-p);
-      dc.send(new Uint8Array(buf, p, n));
-      b.sentRaw = (b.sentRaw||0) + n;
+      if(!l.dc || l.dc.readyState!=='open') throw new Error('closed');
+      if(l.dc.bufferedAmount > HIGH) await drain(l);
+      const n=Math.min(CHUNK, buf.byteLength-p);
+      l.dc.send(new Uint8Array(buf, p, n));
+      b.sentRaw=(b.sentRaw||0)+n;
     }
     off += buf.byteLength;
   }
 }
+async function sendHub(l,b){
+  b.base=0;
+  for(let i=0;i<b.files.length;i++){
+    if(b.cancel || b.lost) break;
+    const f=b.files[i], tid=myCode+'-'+b.id+'-'+i; b.curI=i;
+    lsend(l,{t:'hfile', id:b.id, i, tid});
+    const r = await wait(l,'pull:'+b.id+':'+i);
+    if(r!=='pull') throw new Error('closed');
+    await xhrUp(tid, l, f, b);
+    b.base += f.size; b.done=b.base;
+  }
+  if(b.cancel || b.lost) throw new Error('cancel');
+  lsend(l,{t:'batchdone', id:b.id});
+  b.status='done'; b.done=b.total;
+}
+function xhrUp(tid, l, f, b){
+  return new Promise((res, rej) => {
+    const x=new XMLHttpRequest(); b.xhr=x;
+    x.open('POST','/api/up/'+encodeURIComponent(tid)+'?from='+myCode+'&to='+l.code+'&size='+f.size);
+    x.upload.onprogress = e => { b.done = b.base + e.loaded; };
+    x.onload = () => { b.xhr=null; if(x.status===200) res(); else { try{ b.reason=JSON.parse(x.responseText).reason; }catch(e){} rej(new Error('HTTP '+x.status)); } };
+    x.onerror = x.onabort = () => { b.xhr=null; rej(new Error('putus')); };
+    x.send(f);
+  });
+}
 
 /* ---------- terima ---------- */
-function onData(d){
-  if(typeof d !== 'string'){ onChunk(d); return; }
-  let m; try{ m=JSON.parse(d) }catch(e){ return; }
-  switch(m.t){
-    case 'hello': peerLabel = String(m.name||'Perangkat').slice(0,40); $('peerName').textContent=peerLabel; rememberPeer(peerCodeNow, peerLabel); break;
-    case 'offer': onOffer(m); break;
-    case 'accept': resolve(m.id,'accept'); break;
-    case 'reject': resolve(m.id,'reject'); break;
-    case 'progress': { const b=batches.get(m.id); if(b){ b.ackBytes=m.bytes; } break; }
-    case 'ack': resolve(m.id+':ack', m.ok?'ok':'fail'); break;
-    case 'cancel': {
-      const b=batches.get(m.id);
-      if(b && b.dir==='out'){ b.cancel=true; b.status='cancelled'; render(b); resolve(m.id,'reject'); resolve(m.id+':ack','fail'); }
-      if(incoming && incoming.id===m.id){ abortIncoming('Dibatalkan pengirim'); }
-      break; }
-    case 'start': if(incoming && incoming.status==='run') chain(()=>openSink(m.i)); break;
-    case 'end': if(incoming && incoming.status==='run') chain(()=>closeSink(m.i)); break;
-    case 'batchdone': if(incoming && incoming.id===m.id) chain(()=>finishIncoming()); break;
-  }
-}
-function onOffer(m){
-  const files = (m.files||[]).map(f=>({i:f.i, name:String(f.name||'file'), size:+f.size||0, type:String(f.type||'')}));
-  const b = { id:m.id, dir:'in', meta:files, total:files.reduce((s,f)=>s+f.size,0), done:0, status:'offer', from:peerLabel, saved:[] };
-  batches.set(b.id,b); incoming=b; render(b);
-  const body = peerLabel+' mengirim '+files.length+' file ('+fmt(b.total)+')';
+function onOffer(l, m){
+  const files=(m.files||[]).map(f=>({i:f.i, name:String(f.name||'file'), size:Math.max(0,+f.size||0), type:String(f.type||'')}));
+  if(l.incoming && ['offer','run'].includes(l.incoming.status)){ lsend(l,{t:'reject', id:m.id}); return; }
+  const b={ id:m.id, dir:'in', link:l, meta:files, total:files.reduce((s,f)=>s+f.size,0), done:0, status:'offer', saved:[] };
+  b.key='in:'+l.code+':'+b.id; batches.set(b.key,b); l.incoming=b; render(b);
+  const body = l.name+' mengirim '+files.length+' file ('+fmt(b.total)+')';
   if(NATIVE){ if(!document.hasFocus()) NATIVE.notify('KLM Sender', body); }
-  else if(document.hidden && 'Notification' in window && Notification.permission==='granted'){ try{ new Notification('KLM Sender', {body}); }catch(e){} }
-  const needsPicker = !NATIVE && !dirHandle && canSave && b.total >= BIG_TO_DISK;
+  else if(document.hidden && 'Notification' in window && Notification.permission==='granted'){ try{ new Notification('KLM Sender',{body}); }catch(e){} }
+  const needsPicker = l.via==='p2p' && !NATIVE && !dirHandle && canSave && b.total>=BIG_TO_DISK;
   if(autoAccept && !needsPicker) acceptIncoming(b);
 }
 async function acceptIncoming(b){
   if(b.status!=='offer') return;
-  // tentukan tempat simpan (dalam klik pengguna)
-  b.mode='memory';
-  try{
-    if(NATIVE){ b.mode='native'; }
-    else if(dirHandle){ b.mode='dir'; b.dir_h=dirHandle; }
-    else if(canSave && b.total >= BIG_TO_DISK){
-      if(b.meta.length===1){ b.fileHandle = await window.showSaveFilePicker({suggestedName: baseName(b.meta[0].name)}); b.mode='single'; }
-      else if(canDir){ b.dir_h = await window.showDirectoryPicker({mode:'readwrite'}); b.mode='dir'; }
-    }
-  }catch(e){ toast('Tempat simpan tidak dipilih.'); return; }
-  b.status='run'; b.t0=performance.now(); b.q=Promise.resolve(); startMeter(b); keepAwake(true); render(b);
-  if('Notification' in window && Notification.permission==='default'){ try{ Notification.requestPermission(); }catch(e){} }
-  sendMsg({t:'accept', id:b.id});
+  const l=b.link;
+  if(l.via==='hub') b.mode = NATIVE ? 'hubdisk' : 'hubdl';
+  else {
+    b.mode='memory';
+    try{
+      if(NATIVE) b.mode='native';
+      else if(dirHandle){ b.mode='dir'; b.dir_h=dirHandle; }
+      else if(canSave && b.total>=BIG_TO_DISK){
+        if(b.meta.length===1){ b.fileHandle=await window.showSaveFilePicker({suggestedName:baseName(b.meta[0].name)}); b.mode='single'; }
+        else if(canDir){ b.dir_h=await window.showDirectoryPicker({mode:'readwrite'}); b.mode='dir'; }
+      }
+    }catch(e){ toast('Tempat simpan tidak dipilih.'); return; }
+  }
+  b.status='run'; b.t0=performance.now(); b.q=Promise.resolve(); b.base=0; startMeter(b); keepAwake(true); render(b);
+  if(!NATIVE && 'Notification' in window && Notification.permission==='default' && window.isSecureContext){ try{ Notification.requestPermission(); }catch(e){} }
+  lsend(l,{t:'accept', id:b.id});
 }
-function rejectIncoming(b){ b.status='rejected'; render(b); sendMsg({t:'reject', id:b.id}); if(incoming===b) incoming=null; }
+function rejectIncoming(b){ b.status='rejected'; render(b); lsend(b.link,{t:'reject', id:b.id}); if(b.link.incoming===b) b.link.incoming=null; }
 const baseName = n => n.split('/').pop() || 'file';
 const flatName = n => n.split('/').filter(Boolean).join('_') || 'file';
+function chain(l, fn){ const b=l.incoming; if(!b) return; b.q = b.q.then(()=> b.status==='run' ? fn() : null).catch(err => failIncoming(l,'Gagal menyimpan: '+(err && err.message || err))); }
 
-function chain(fn){ const b=incoming; if(!b) return; b.q = b.q.then(()=> b.status==='run' ? fn() : null).catch(err => { failIncoming('Gagal menyimpan: '+(err && err.message || err)); }); }
-async function uniqueHandle(dir, name){
-  const dot=name.lastIndexOf('.'); const stem=dot>0?name.slice(0,dot):name, ext=dot>0?name.slice(dot):'';
-  for(let k=0;k<1000;k++){
-    const n = k? stem+' ('+k+')'+ext : name;
-    try{ await dir.getFileHandle(n); }catch(e){ return dir.getFileHandle(n,{create:true}); }
+// Wi-Fi lokal: file dialirkan lewat server PC
+async function hubFile(l, m){
+  const b=l.incoming, f=b.meta[m.i]; if(!f) return;
+  hubTids.set(m.tid, {b, i:m.i}); b.curTid=m.tid;
+  if(NATIVE){ await NATIVE.hubSink(m.tid, f.name); }
+  else {
+    const a=document.createElement('a');
+    a.href='/api/down/'+encodeURIComponent(m.tid)+'?name='+encodeURIComponent(flatName(f.name))+'&size='+f.size;
+    a.download=flatName(f.name); a.rel='noopener'; document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),2000);
   }
+  lsend(l,{t:'hpull', id:b.id, i:m.i});
+}
+function onXfer(m){
+  const e=hubTids.get(m.tid); if(!e) return;
+  const b=e.b, f=b.meta[e.i];
+  if(!m.done){ b.done=b.base+m.bytes; return; }
+  hubTids.delete(m.tid);
+  if(m.ok){ b.base+=f.size; b.done=b.base; b.saved.push({name:f.name, size:f.size, path:m.path||null, dl:!NATIVE}); render(b); }
+  else if(b.link.incoming===b && b.status==='run') failIncoming(b.link, m.reason||'Transfer terputus');
+}
+
+// internet: potongan data diterima lewat data channel
+async function uniqueHandle(dir, name){
+  const dot=name.lastIndexOf('.'), stem=dot>0?name.slice(0,dot):name, ext=dot>0?name.slice(dot):'';
+  for(let k=0;k<1000;k++){ const n=k?stem+' ('+k+')'+ext:name; try{ await dir.getFileHandle(n); }catch(e){ return dir.getFileHandle(n,{create:true}); } }
   return dir.getFileHandle(stem+'-'+Date.now()+ext,{create:true});
 }
-async function openSink(i){
-  const b=incoming, f=b.meta[i]; b.cur={i, f, chunks:[], got:0};
-  if(b.mode==='native'){ b.cur.w = await nativeWriter(f.name); b.cur.savedAs = b.cur.w.name; }
-  else if(b.mode==='single'){ b.cur.w = await b.fileHandle.createWritable(); }
+async function nativeWriter(name){
+  const h=await NATIVE.fileOpen(name); const LIM=8*1024*1024; let parts=[], size=0;
+  const flush=async()=>{ if(!size) return; const out=new Uint8Array(size); let o=0; for(const p of parts){ out.set(new Uint8Array(p),o); o+=p.byteLength; } parts=[]; size=0; await NATIVE.fileWrite(h.id,out); };
+  return { name:h.name, async write(buf){ parts.push(buf); size+=buf.byteLength; if(size>=LIM) await flush(); }, async close(){ await flush(); return NATIVE.fileClose(h.id); }, async abort(){ parts=[]; size=0; return NATIVE.fileAbort(h.id); } };
+}
+async function openSink(l, i){
+  const b=l.incoming, f=b.meta[i]; b.cur={i, f, chunks:[]};
+  if(b.mode==='native'){ b.cur.w=await nativeWriter(f.name); }
+  else if(b.mode==='single'){ b.cur.w=await b.fileHandle.createWritable(); }
   else if(b.mode==='dir'){
-    const parts = f.name.split('/').filter(p=>p && p!=='.' && p!=='..'); const fname = parts.pop() || 'file';
-    let d=b.dir_h; for(const p of parts){ d = await d.getDirectoryHandle(p,{create:true}); }
-    const fh = await uniqueHandle(d, fname); b.cur.w = await fh.createWritable(); b.cur.savedAs = fh.name;
+    const parts=f.name.split('/').filter(p=>p && p!=='.' && p!=='..'); const fname=parts.pop()||'file';
+    let d=b.dir_h; for(const p of parts){ d=await d.getDirectoryHandle(p,{create:true}); }
+    const fh=await uniqueHandle(d,fname); b.cur.w=await fh.createWritable();
   }
 }
-function onChunk(buf){
-  const b=incoming; if(!b || b.status!=='run') return;
+function onChunk(l, buf){
+  const b=l.incoming; if(!b || b.status!=='run') return;
   b.done += buf.byteLength;
-  b.q = b.q.then(async () => {
-    if(b.status!=='run' || !b.cur) return;
-    if(b.cur.w) await b.cur.w.write(buf); else b.cur.chunks.push(buf);
-  }).catch(err => failIncoming('Gagal menyimpan: '+(err && err.message || err)));
+  b.q = b.q.then(async () => { if(b.status!=='run' || !b.cur) return; if(b.cur.w) await b.cur.w.write(buf); else b.cur.chunks.push(buf); })
+           .catch(err => failIncoming(l,'Gagal menyimpan: '+(err && err.message || err)));
 }
-async function closeSink(i){
-  const b=incoming, c=b.cur; if(!c) return;
-  if(c.w){ const p = await c.w.close(); b.saved.push({name:c.f.name, size:c.f.size, path: b.mode==='native' ? p : null}); }
+async function closeSink(l){
+  const b=l.incoming, c=b && b.cur; if(!c) return;
+  if(c.w){ const p=await c.w.close(); b.saved.push({name:c.f.name, size:c.f.size, path: b.mode==='native' ? p : null}); }
   else {
-    const blob = new Blob(c.chunks, {type:c.f.type||'application/octet-stream'}); c.chunks=null;
-    const url = URL.createObjectURL(blob);
-    const item = {name:c.f.name, size:c.f.size, url};
-    b.saved.push(item); downloadItem(item);
+    const blob=new Blob(c.chunks,{type:c.f.type||'application/octet-stream'}); c.chunks=null;
+    const item={name:c.f.name, size:c.f.size, url:URL.createObjectURL(blob)}; b.saved.push(item); downloadItem(item);
   }
   b.cur=null; render(b);
 }
-/* penulis file ke disk lewat aplikasi Windows: dikumpulkan per 8 MB lalu ditulis */
-async function nativeWriter(name){
-  const h = await NATIVE.fileOpen(name);
-  const LIM = 8*1024*1024; let parts=[], size=0;
-  const flush = async () => {
-    if(!size) return;
-    const out = new Uint8Array(size); let o=0;
-    for(const p of parts){ out.set(new Uint8Array(p), o); o+=p.byteLength; }
-    parts=[]; size=0;
-    await NATIVE.fileWrite(h.id, out);
-  };
-  return {
-    name: h.name,
-    async write(buf){ parts.push(buf); size+=buf.byteLength; if(size>=LIM) await flush(); },
-    async close(){ await flush(); return NATIVE.fileClose(h.id); },
-    async abort(){ parts=[]; size=0; return NATIVE.fileAbort(h.id); }
-  };
-}
-function downloadItem(item){
-  const a=document.createElement('a'); a.href=item.url; a.download=flatName(item.name); a.rel='noopener';
-  document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),100);
-}
-function finishIncoming(){
-  const b=incoming; if(!b) return;
+function downloadItem(item){ const a=document.createElement('a'); a.href=item.url; a.download=flatName(item.name); a.rel='noopener'; document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),100); }
+function finishIncoming(l){
+  const b=l.incoming; if(!b) return;
   b.status='done'; b.done=b.total; stopMeter(b); render(b);
-  sendMsg({t:'ack', id:b.id, ok:true}); incoming=null; keepAwake(false);
-  toast('Selesai: '+b.meta.length+' file diterima.');
+  lsend(l,{t:'ack', id:b.id, ok:true}); l.incoming=null; if(!busy()) keepAwake(false);
+  toast('Selesai: '+b.meta.length+' file dari '+l.name+'.');
 }
-async function abortIncoming(reason){
-  const b=incoming; if(!b) return;
-  b.status='cancelled'; b.reason=reason; stopMeter(b);
+async function abortIncoming(l, reason){
+  const b=l.incoming; if(!b) return;
+  l.incoming=null; b.status='cancelled'; b.reason=reason; stopMeter(b);
+  if(b.curTid && hubTids.has(b.curTid)){ hubTids.delete(b.curTid); if(NATIVE) NATIVE.hubCancel(b.curTid); else hubPost('/api/cancel/'+encodeURIComponent(b.curTid),{}); }
   if(b.cur && b.cur.w){ try{ await b.cur.w.abort(); }catch(e){} }
-  if(b.cur) b.cur.chunks=null; b.cur=null; incoming=null; render(b); keepAwake(false);
+  if(b.cur) b.cur.chunks=null; b.cur=null; render(b); if(!busy()) keepAwake(false);
 }
-function failIncoming(reason){
-  const b=incoming; if(!b) return;
-  abortIncoming(reason).then(()=>{ b.status='failed'; render(b); });
-  sendMsg({t:'ack', id:b.id, ok:false});
+function failIncoming(l, reason){
+  const b=l.incoming; if(!b) return;
+  abortIncoming(l, reason).then(()=>{ b.status='failed'; render(b); });
+  lsend(l,{t:'ack', id:b.id, ok:false});
 }
 
-/* ---------- pengukur kecepatan ---------- */
+/* ---------- kecepatan, layar tetap menyala ---------- */
 function startMeter(b){
-  b.samples=[]; b.speed=0;
-  b.timer = setInterval(() => {
-    if(b.dir==='out'){ b.done = Math.max(0, (b.sentRaw||0) - (dc ? dc.bufferedAmount : 0)); }
-    const now=performance.now(); b.samples.push([now, b.done]);
-    while(b.samples.length>2 && now-b.samples[0][0] > 3000) b.samples.shift();
+  b.samples=[]; b.speed=0; clearInterval(b.timer);
+  b.timer=setInterval(() => {
+    if(b.dir==='out' && b.link.via==='p2p') b.done=Math.max(0,(b.sentRaw||0)-(b.link.dc?b.link.dc.bufferedAmount:0));
+    const now=performance.now(); b.samples.push([now,b.done]);
+    while(b.samples.length>2 && now-b.samples[0][0]>3000) b.samples.shift();
     const [t0,d0]=b.samples[0]; b.speed = now>t0 ? (b.done-d0)/((now-t0)/1000) : 0;
     render(b);
   }, 500);
 }
-function stopMeter(b){ clearInterval(b.timer); b.timer=null; if(b.t0) b.avg = b.total/Math.max(.001,(performance.now()-b.t0)/1000); }
+function stopMeter(b){ clearInterval(b.timer); b.timer=null; if(b.t0) b.avg=b.total/Math.max(.001,(performance.now()-b.t0)/1000); }
+async function keepAwake(on){
+  try{
+    if(on && !wakeLock && 'wakeLock' in navigator){ wakeLock=await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release',()=>{wakeLock=null}); }
+    if(!on && wakeLock){ await wakeLock.release(); wakeLock=null; }
+  }catch(e){}
+}
+const busy = () => [...links.values()].some(l => l.sending || (l.incoming && l.incoming.status==='run'));
+document.addEventListener('visibilitychange', () => { if(document.visibilityState==='visible' && busy()) keepAwake(true); });
+window.addEventListener('beforeunload', e => { if(busy()){ e.preventDefault(); e.returnValue=''; } });
 
-/* ---------- tampilan ---------- */
+/* ---------- daftar transfer ---------- */
 const ICON_OUT='<svg class="i" viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>';
 const ICON_IN='<svg class="i" viewBox="0 0 24 24"><path d="M17 7 7 17"/><path d="M16 17H7V8"/></svg>';
-const STATUS = {
-  queue:['Antre',''], wait:['Menunggu diterima',''], offer:['Masuk','run'], run:['Berjalan','run'],
-  done:['Selesai','done'], rejected:['Ditolak','err'], cancelled:['Dibatalkan','err'], failed:['Gagal','err']
-};
-let raf=new Set(), rafId=0;
-function taskbar(){
-  if(!NATIVE) return;
-  let tot=0, done=0;
-  batches.forEach(x => { if(x.status==='run'){ tot+=x.total; done+=x.done; } });
-  NATIVE.progress(tot ? Math.min(1, done/tot) : -1);
-}
+const STATUS={ queue:['Antre',''], wait:['Menunggu diterima',''], offer:['Masuk','run'], run:['Berjalan','run'], done:['Selesai','done'], rejected:['Ditolak','err'], cancelled:['Dibatalkan','err'], failed:['Gagal','err'] };
+const raf=new Set(); let rafId=0;
 function render(b){ raf.add(b); if(!rafId) rafId=requestAnimationFrame(()=>{ rafId=0; raf.forEach(draw); raf.clear(); taskbar(); }); }
+function taskbar(){ if(!NATIVE) return; let tot=0,done=0; batches.forEach(x=>{ if(x.status==='run'){ tot+=x.total; done+=x.done; } }); NATIVE.progress(tot?Math.min(1,done/tot):-1); }
 function draw(b){
-  $('emptyList').hidden = true;
-  if(!b.el){
-    b.el=document.createElement('article'); b.el.className='tx '+(b.dir==='in'?'in':'out');
-    $('list').prepend(b.el);
-  }
-  const n=b.meta.length, first=baseName(b.meta[0].name);
+  $('emptyList').hidden=true;
+  if(!b.el){ b.el=document.createElement('article'); b.el.className='tx '+(b.dir==='in'?'in':'out'); $('list').prepend(b.el); }
+  const n=b.meta.length, first=baseName(b.meta[0] ? b.meta[0].name : 'file');
   const title = n===1 ? first : first+' +'+(n-1)+' file';
-  const [st, cls] = STATUS[b.status] || ['',''];
+  const [st,cls]=STATUS[b.status]||['',''];
   const pct = b.total ? Math.min(100, b.done/b.total*100) : (b.status==='done'?100:0);
-  const left = b.total-b.done;
   let stats='';
-  if(b.status==='run') stats = '<div class="stats"><span>'+fmt(b.done)+' / '+fmt(b.total)+' · '+pct.toFixed(0)+'%</span><span class="spd">'+fmtSpd(b.speed||0)+'</span><span>sisa '+fmtEta(left/(b.speed||1e-9))+'</span></div>';
-  else if(b.status==='done') stats = '<div class="stats"><span>'+fmt(b.total)+'</span><span>rata-rata '+fmtSpd(b.avg||0)+'</span></div>';
-  else if(b.reason) stats = '<div class="stats"><span>'+esc(b.reason)+'</span></div>';
-  const who = b.dir==='in' ? 'Dari '+esc(b.from||'perangkat') : 'Ke '+esc(peerLabel||'perangkat');
+  if(b.status==='run') stats='<div class="stats"><span>'+fmt(b.done)+' / '+fmt(b.total)+' · '+pct.toFixed(0)+'%</span><span class="spd">'+fmtSpd(b.speed||0)+'</span><span>sisa '+fmtEta((b.total-b.done)/(b.speed||1e-9))+'</span></div>';
+  else if(b.status==='done') stats='<div class="stats"><span>'+fmt(b.total)+'</span><span>rata-rata '+fmtSpd(b.avg||0)+'</span></div>';
+  else if(b.reason) stats='<div class="stats"><span>'+esc(b.reason)+'</span></div>';
+  const via = b.link.via==='hub' ? ' · Wi-Fi' : '';
+  const who = (b.dir==='in' ? 'Dari ' : 'Ke ')+esc(b.link.name)+via;
   let filesHtml='';
   if(b.dir==='in' && b.saved && b.saved.length){
-    filesHtml = '<ul class="files">'+b.saved.slice(-50).map((s,k)=>'<li><span>'+esc(s.name)+'</span>'+(s.url?'<button class="small" data-dl="'+k+'">Simpan</button>':s.path?'<span class="row" style="margin:0;gap:6px;flex-wrap:nowrap"><button class="small" data-open="'+k+'">Buka</button><button class="small ghost" data-show="'+k+'">Folder</button></span>':'<span class="sz">tersimpan</span>')+'</li>').join('')+'</ul>';
+    const shown=b.saved.slice(-50);
+    filesHtml='<ul class="files">'+shown.map((s,k)=>'<li><span>'+esc(s.name)+'</span>'+
+      (s.url ? '<button class="small" data-dl="'+k+'">Simpan</button>'
+      : s.path ? '<span class="row" style="margin:0;gap:6px;flex-wrap:nowrap"><button class="small" data-open="'+k+'">Buka</button><button class="small ghost" data-show="'+k+'">Folder</button></span>'
+      : '<span class="sz">'+(s.dl?'di Unduhan':'tersimpan')+'</span>')+'</li>').join('')+'</ul>';
   } else if(b.status==='offer' || n>1){
-    const show=b.meta.slice(0,5);
-    filesHtml = '<ul class="files">'+show.map(f=>'<li><span>'+esc(f.name)+'</span><span class="sz">'+fmt(f.size)+'</span></li>').join('')+(n>5?'<li><span>…dan '+(n-5)+' file lain</span></li>':'')+'</ul>';
+    filesHtml='<ul class="files">'+b.meta.slice(0,5).map(f=>'<li><span>'+esc(f.name)+'</span><span class="sz">'+fmt(f.size)+'</span></li>').join('')+(n>5?'<li><span>…dan '+(n-5)+' file lain</span></li>':'')+'</ul>';
   }
   let actions='';
   if(b.status==='offer') actions='<div class="row"><button class="small" data-act="reject">Tolak</button><button class="small primary" data-act="accept">Terima '+fmt(b.total)+'</button></div>';
-  else if(b.status==='run' || b.status==='wait' || b.status==='queue') actions='<div class="row"><button class="small ghost" data-act="cancel">Batalkan</button></div>';
-  b.el.innerHTML =
+  else if(['run','wait','queue'].includes(b.status)) actions='<div class="row"><button class="small ghost" data-act="cancel">Batalkan</button></div>';
+  b.el.innerHTML=
     '<div class="tx-head"><div class="dir">'+(b.dir==='in'?ICON_IN:ICON_OUT)+'</div>'+
     '<div class="tx-title"><b title="'+esc(title)+'">'+esc(title)+'</b><small>'+who+' · '+n+' file · '+fmt(b.total)+'</small></div>'+
     '<span class="badge '+cls+'">'+st+'</span></div>'+
     (b.status==='run'||b.status==='done' ? '<div class="bar"><i style="width:'+pct+'%"></i></div>' : '')+
     stats+filesHtml+actions;
   b.el.querySelectorAll('[data-act]').forEach(btn => btn.onclick = () => {
-    const a=btn.dataset.act;
+    const a=btn.dataset.act, l=b.link;
     if(a==='accept') acceptIncoming(b);
     else if(a==='reject') rejectIncoming(b);
     else if(a==='cancel'){
-      if(b.dir==='out'){ b.cancel=true; if(b.status!=='run'){ b.status='cancelled'; resolve(b.id,'reject'); const qi=sendQueue.indexOf(b); if(qi>=0) sendQueue.splice(qi,1); if(b.status==='cancelled') sendMsg({t:'cancel', id:b.id}); render(b);} }
-      else { sendMsg({t:'cancel', id:b.id}); abortIncoming('Dibatalkan'); }
+      if(b.dir==='out'){
+        b.cancel=true;
+        if(b.status!=='run'){ const qi=l.queue.indexOf(b); if(qi>=0) l.queue.splice(qi,1); if(b.status==='wait') lsend(l,{t:'cancel', id:b.id}); b.status='cancelled'; resolve(l,'ans:'+b.id,'reject'); render(b); }
+        else { if(b.xhr) b.xhr.abort(); resolve(l,'pull:'+b.id+':'+b.curI,'cancel'); }
+      } else { lsend(l,{t:'cancel', id:b.id}); if(l.incoming===b) abortIncoming(l,'Dibatalkan'); }
     }
   });
   b.el.querySelectorAll('[data-open]').forEach(btn => btn.onclick = () => { const s=b.saved.slice(-50)[+btn.dataset.open]; if(s && NATIVE) NATIVE.openFile(s.path); });
@@ -815,24 +1117,56 @@ function draw(b){
   b.el.querySelectorAll('[data-dl]').forEach(btn => btn.onclick = () => { const s=b.saved.slice(-50)[+btn.dataset.dl]; if(s) downloadItem(s); });
 }
 
-/* ---------- pilih & seret ---------- */
+/* ---------- pilih & seret file ---------- */
 $('pickFiles').onchange = e => { queueFiles(e.target.files); e.target.value=''; };
 $('pickDir').onchange = e => { queueFiles(e.target.files); e.target.value=''; };
 const drop=$('drop');
 ['dragenter','dragover'].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave','drop'].forEach(ev => document.addEventListener(ev, e => { if(ev==='dragleave' && e.relatedTarget) return; drop.classList.remove('over'); }));
 document.addEventListener('drop', e => { e.preventDefault(); if(e.dataTransfer && e.dataTransfer.files.length) queueFiles(e.dataTransfer.files); });
-document.addEventListener('paste', e => { if(e.clipboardData && e.clipboardData.files.length && conn && conn.open) queueFiles(e.clipboardData.files); });
+document.addEventListener('paste', e => { if(e.clipboardData && e.clipboardData.files.length && selected.size) queueFiles(e.clipboardData.files); });
+
+/* ---------- pindai QR (browser yang mendukung kamera) ---------- */
+let scanStream=null, scanTimer=0;
+(async () => {
+  try{
+    if(!('BarcodeDetector' in window) || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    const f=await BarcodeDetector.getSupportedFormats(); if(f.includes('qr_code')) $('scanBtn').hidden=false;
+  }catch(e){}
+})();
+function handleScanned(text){
+  let u=null; try{ u=new URL(String(text).trim()); }catch(e){}
+  const c = u ? cleanCode(u.searchParams.get('to')) : cleanCode(text);
+  // QR dari aplikasi PC berisi alamat server Wi-Fi: buka langsung agar bisa tanpa internet
+  if(u && u.protocol==='http:' && u.origin!==location.origin && c.length===6){ location.href=u.href; return true; }
+  if(c.length===6){ connectTo(c); return true; }
+  return false;
+}
+async function openScanner(){
+  const det=new BarcodeDetector({formats:['qr_code']});
+  try{ scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}); }
+  catch(e){ toast('Kamera tidak bisa dibuka. Izinkan akses kamera atau ketik kodenya.'); return; }
+  const v=$('scanVideo'); v.srcObject=scanStream; $('scanner').hidden=false; $('scanMsg').textContent='Arahkan kamera ke QR di perangkat lain';
+  try{ await v.play(); }catch(e){}
+  const tick=async()=>{
+    if(!scanStream) return;
+    try{ const r=await det.detect(v); for(const x of r){ if(handleScanned(x.rawValue)){ closeScanner(); return; } } if(r.length) $('scanMsg').textContent='QR ini bukan kode KLM Sender'; }catch(e){}
+    scanTimer=setTimeout(tick,250);
+  };
+  tick();
+}
+function closeScanner(){ clearTimeout(scanTimer); if(scanStream){ scanStream.getTracks().forEach(t=>t.stop()); scanStream=null; } $('scanVideo').srcObject=null; $('scanner').hidden=true; }
+$('scanBtn').onclick=openScanner;
+$('scanClose').onclick=closeScanner;
 
 /* ---------- mulai ---------- */
-const saved = cleanCode(store.get('klm-code'));
-(async () => {
-  if(NATIVE){
-    try{ NINFO = await NATIVE.info(); showDirFn && showDirFn(NINFO.saveDir); }catch(e){}
-    if(!store.get('klm-name')) $('devName').value = 'PC Windows';
-  }
-  startPeer(saved.length===6 ? saved : genCode());
-})();
+showCode(); renderPwdInfo(); renderRecent(); renderDevices(); updateStatus();
+$('devName').value = myName;
+if(myKind==='hp'){ const ic=document.querySelector('.devname svg'); if(ic) ic.outerHTML=ICON.hp; }
+if(!myName){ setStatus('busy','Isi nama'); await askName(); }
+updateStatus(); renderQR();
+await startHub();
+ensurePeer();
 };
 </script>
 </body>
